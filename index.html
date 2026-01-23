@@ -653,6 +653,43 @@
             color: var(--danger);
         }
 
+        /* Quick location select buttons */
+        .quick-btn {
+            padding: 0.375rem 0.75rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            border-color: var(--secondary);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-btn:active {
+            transform: translateY(0);
+        }
+
+        .location-input {
+            width: 100%;
+        }
+
+        .quick-select-buttons {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
         /* Guest fields responsive grid */
         .guest-fields {
             display: grid;
@@ -912,15 +949,35 @@
         }
 
         function goHome() {
+            // 重置所有状态
+            state.guestCount = 0;
+            state.carCount = 0;
+            state.golfGuests = [];
+            state.busRoutes = {
+                hcmToHt: false,
+                htToHcm: false
+            };
+            
+            // 清空表单内容
+            document.getElementById('bookingContent').innerHTML = '';
+            document.getElementById('emailPreview').textContent = '';
+            
+            // 切换页面显示
             document.getElementById('bookingPage').classList.remove('active');
             document.getElementById('homePage').classList.add('active');
             document.getElementById('previewCard').style.display = 'none';
+            
             window.scrollTo(0, 0);
         }
 
         function generateBookingForms() {
             const content = document.getElementById('bookingContent');
             content.innerHTML = '';
+            
+            // 重置所有计数器
+            state.guestCount = 0;
+            state.carCount = 0;
+            state.golfGuests = [];
 
             if (state.selectedServices.has('room')) {
                 content.innerHTML += generateRoomForm();
@@ -1314,6 +1371,17 @@
         function addCar() {
             state.carCount++;
             const container = document.getElementById('carsContainer');
+            
+            // 获取订房的入住日期作为默认日期
+            const checkInDate = document.getElementById('checkIn')?.value || '';
+            
+            // 自动填充客人名字（如果有订房）
+            let autoFilledName = '';
+            if (state.selectedServices.has('room')) {
+                const firstGuestName = document.getElementById('guestName-1')?.value || '';
+                autoFilledName = firstGuestName;
+            }
+            
             const carDiv = document.createElement('div');
             carDiv.className = 'item-group';
             carDiv.id = `car-${state.carCount}`;
@@ -1333,7 +1401,7 @@
                     </div>
                     <div class="form-group">
                         <label>Guest Name</label>
-                        <input type="text" id="carName-${state.carCount}">
+                        <input type="text" id="carName-${state.carCount}" value="${autoFilledName}">
                     </div>
                     <div class="form-group">
                         <label>Number of Guests</label>
@@ -1341,21 +1409,53 @@
                     </div>
                     <div class="form-group">
                         <label>Phone</label>
-                        <input type="text" id="carPhone-${state.carCount}">
+                        <input type="text" id="carPhone-${state.carCount}" value="0343222771">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Date & Time</label>
-                        <input type="datetime-local" id="carDateTime-${state.carCount}">
+                        <label>Date</label>
+                        <input type="date" id="carDate-${state.carCount}" value="${checkInDate}">
                     </div>
                     <div class="form-group">
+                        <label>Time</label>
+                        <input type="time" id="carTime-${state.carCount}" value="12:00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
                         <label>Pick Up Point</label>
-                        <input type="text" id="carPickup-${state.carCount}" placeholder="TSN airport">
+                        <div style="position: relative;">
+                            <input type="text" id="carPickup-${state.carCount}" placeholder="Enter location or select below" 
+                                   list="pickupLocations-${state.carCount}" class="location-input">
+                            <datalist id="pickupLocations-${state.carCount}">
+                                <option value="Main Lobby">
+                                <option value="TSN Airport">
+                            </datalist>
+                            <div class="quick-select-buttons" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button type="button" onclick="setLocation('carPickup-${state.carCount}', 'Main Lobby')" 
+                                        class="quick-btn">Main Lobby</button>
+                                <button type="button" onclick="setLocation('carPickup-${state.carCount}', 'TSN Airport')" 
+                                        class="quick-btn">TSN Airport</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Drop Off Point</label>
-                        <input type="text" id="carDropoff-${state.carCount}" placeholder="Main lobby">
+                        <div style="position: relative;">
+                            <input type="text" id="carDropoff-${state.carCount}" placeholder="Enter location or select below" 
+                                   list="dropoffLocations-${state.carCount}" class="location-input">
+                            <datalist id="dropoffLocations-${state.carCount}">
+                                <option value="Main Lobby">
+                                <option value="TSN Airport">
+                            </datalist>
+                            <div class="quick-select-buttons" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button type="button" onclick="setLocation('carDropoff-${state.carCount}', 'Main Lobby')" 
+                                        class="quick-btn">Main Lobby</button>
+                                <button type="button" onclick="setLocation('carDropoff-${state.carCount}', 'TSN Airport')" 
+                                        class="quick-btn">TSN Airport</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1374,6 +1474,10 @@
                 </div>
             `;
             container.appendChild(carDiv);
+        }
+
+        function setLocation(inputId, location) {
+            document.getElementById(inputId).value = location;
         }
 
         function removeCar(id) {
@@ -1663,14 +1767,14 @@ Authorizer: ${busAuthorizer}`;
                 const name = document.getElementById(`carName-${i}`)?.value;
                 const guests = document.getElementById(`carGuests-${i}`)?.value;
                 const phone = document.getElementById(`carPhone-${i}`)?.value;
-                const dateTime = document.getElementById(`carDateTime-${i}`)?.value;
+                const date = document.getElementById(`carDate-${i}`)?.value;
+                const time = document.getElementById(`carTime-${i}`)?.value;
                 const pickup = document.getElementById(`carPickup-${i}`)?.value;
                 const dropoff = document.getElementById(`carDropoff-${i}`)?.value;
 
-                if (name && dateTime) {
-                    const dt = new Date(dateTime);
-                    const time = dt.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true});
-                    const date = formatDateShort(dateTime.split('T')[0]);
+                if (name && date && time) {
+                    const formattedDate = formatDateShort(date);
+                    const formattedTime = time; // Already in HH:MM format
 
                     carDetails.push(`${i}, Car Type: ${carType}
 
@@ -1680,7 +1784,7 @@ Number of guests: ${guests}
 
 Phone: ${phone}
 
-Date & time: ${time} ${date}
+Date & time: ${formattedTime} ${formattedDate}
 
 Pick up point: ${pickup}
 
