@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Service Booking System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a4d2e;
+            --primary-light: #2d6a4f;
+            --secondary: #d4af37;
+            --accent: #8b7355;
+            --bg-gradient-start: #f8f9fa;
+            --bg-gradient-end: #e9ecef;
+            --card: #ffffff;
+            --text: #212529;
+            --text-secondary: #6c757d;
+            --border: #dee2e6;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1rem 0.75rem;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            z-index: -1;
+            opacity: 0.05;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1.25rem 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            color: white;
+            margin-bottom: 0.375rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .selection-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 1.25rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .selection-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .selection-card:hover {
+            border-color: var(--secondary);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .selection-card.selected {
+            border-color: var(--secondary);
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .selection-card.selected::before {
+            opacity: 0.05;
+        }
+
+        .selection-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .selection-card p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+            z-index: 2;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+            animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .selection-card.selected .checkmark {
+            display: flex;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .guest-group, .item-group {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid var(--secondary);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .guest-group:hover, .item-group:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateX(4px);
+        }
+
+        .guest-header, .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .guest-number, .item-number {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .guest-number::before {
+            content: '👤';
+            font-size: 1rem;
+        }
+
+        .item-number::before {
+            content: '🚗';
+            font-size: 1rem;
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, var(--danger) 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 0.375rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .remove-btn:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        input, select, textarea {
+            padding: 0.625rem 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        input:disabled, select:disabled {
+            background: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Inter', sans-serif;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--success) 0%, #218838 100%);
+            color: white;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-add {
+            background: transparent;
+            color: var(--primary);
+            border: 2px dashed var(--secondary);
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-add:hover {
+            background: rgba(212, 175, 55, 0.05);
+            border-style: solid;
+            transform: translateY(-2px);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .email-preview {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            border: 2px solid var(--border);
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            border-left: 4px solid var(--success);
+            text-align: center;
+            display: none;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .breadcrumb {
+            text-align: center;
+            margin-bottom: 1.25rem;
+            padding: 0.75rem 1rem;
+            background: white;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-sm);
+            font-weight: 500;
+            border: 1px solid var(--border);
+        }
+
+        .tip-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            border-left: 3px solid var(--warning);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-box::before {
+            content: '💡';
+            font-size: 1rem;
+        }
+
+        /* Bus Route Buttons */
+        .route-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.625rem;
+            margin: 1rem 0;
+        }
+
+        .route-btn {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        .route-btn:hover {
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .route-btn.active {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            border-color: var(--secondary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .bus-route-form {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 8px;
+            border-left: 3px solid var(--secondary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .bus-route-form h4 {
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        /* Date picker styling */
+        input[type="date"] {
+            position: relative;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 0.75rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        input[type="date"]:hover::-webkit-calendar-picker-indicator {
+            opacity: 1;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+            padding: 0;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-text {
+            padding: 0 0.25rem;
+        }
+
+        /* Sharer button styling */
+        .btn-sharer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-sharer:hover {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            border-color: var(--secondary);
+            border-style: solid;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-sharer.active {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            border-color: var(--secondary);
+            border-style: solid;
+            color: var(--primary);
+        }
+
+        .sharer-icon {
+            font-size: 1rem;
+        }
+
+        .btn-sharer-remove {
+            padding: 0.375rem 0.875rem;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-sharer-remove:hover {
+            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Guest fields responsive grid */
+        .guest-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sharer-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .subtitle {
+                font-size: 0.7rem;
+            }
+
+            .selection-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.625rem;
+            }
+
+            .selection-card {
+                padding: 1rem 0.75rem;
+            }
+
+            .selection-card h3 {
+                font-size: 1rem;
+            }
+
+            .selection-card p {
+                font-size: 0.75rem;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .actions .btn {
+                width: 100%;
+                padding: 0.625rem 1.25rem;
+                font-size: 0.85rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0.625rem;
+            }
+
+            .route-buttons {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .guest-group, .item-group {
+                padding: 0.875rem;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+            }
+
+            .header {
+                padding: 1rem 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .btn-sharer {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .guest-fields,
+            .sharer-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        /* Loading state */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>The Grand Ho Tram</h1>
+            <p class="subtitle">Booking Management System</p>
+        </div>
+
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <div class="card">
+                <div class="section-title">Please Select Services to Book</div>
+                <div class="selection-grid">
+                    <div class="selection-card" onclick="toggleSelection('room')">
+                        <div class="checkmark">✓</div>
+                        <h3>Room Booking</h3>
+                        
+                    </div>
+                    <div class="selection-card" onclick="toggleSelection('car')">
+                        <div class="checkmark">✓</div>
+                        <h3>Car Service</h3>
+                        
+                    </div>
+                    <div class="selection-card" onclick="toggleSelection('golf')">
+                        <div class="checkmark">✓</div>
+                        <h3>Golf Booking</h3>
+                        
+                    </div>
+                    <div class="selection-card" onclick="toggleSelection('bus')">
+                        <div class="checkmark">✓</div>
+                        <h3>Bus Service</h3>
+                        
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="proceedToBooking()">Continue Booking →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Page -->
+        <div id="bookingPage" class="page">
+            <div class="breadcrumb" id="breadcrumb"></div>
+            <div id="bookingContent"></div>
+            <div class="actions">
+                <button class="btn btn-back" onclick="goHome()">← Back to Home</button>
+                <button class="btn btn-primary" onclick="generateAllEmails()">✉️ Generate Email</button>
+                <button class="btn btn-secondary" onclick="copyAllEmails()">📋 Copy</button>
+                <button class="btn btn-send" onclick="sendEmail()">📨 Send Email</button>
+            </div>
+            <div class="success-message" id="successMessage"></div>
+            <div class="card" id="previewCard" style="display: none; margin-top: 1.5rem;">
+                <div class="section-title">👀 Email Preview</div>
+                <div class="email-preview" id="emailPreview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            selectedServices: new Set(),
+            guestCount: 0,
+            carCount: 0,
+            golfGuests: [],
+            busRoutes: {
+                hcmToHt: false,
+                htToHcm: false
+            }
+        };
+
+        const roomTypes = {
+            HIR: [
+                { types: ['TSTS', 'TSTN', 'KPUS', 'TPUN', 'TPU'], promotion: 218 },
+                { types: ['TVUN', 'TVUS', 'KLON', 'KLOS'], promotion: 268 },
+                { types: ['KOTS', 'TOTS'], promotion: 388 },
+                { types: ['XOTN', 'XOTS', 'XFTN', 'XFTS', 'XLOS', 'XCIS'], promotion: 888 },
+                { types: ['X2ON', 'X2OS', 'XDBS'], promotion: 1888 },
+                { types: ['XVUN', 'XVUS'], promotion: 2188 },
+                { types: ['X2AN', 'X2AS'], promotion: 3188 }
+            ],
+            IC: [
+                { types: ['KDXN', 'KDXS', 'TDXN', 'TDXS', 'KLON', 'KLOS', 'TLON', 'TLOS'], promotion: 288 },
+                { types: ['KOTS', 'KOTN', 'TOTS', 'TOTN'], promotion: 288 },
+                { types: ['KVUS', 'KVUN', 'TVUS', 'TVUN'], promotion: 388 },
+                { types: ['XEXS', 'XEXN', 'XOTS', 'XOTN', 'XVUS', 'XVUN'], promotion: 3188 },
+                { types: ['XFTS', 'XFTN', 'XLOS', 'XLON'], promotion: 3888 }
+            ]
+        };
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${day.toString().padStart(2, '0')}-${months[date.getMonth()]}-${date.getFullYear()}`;
+        }
+
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const ordinal = day + (day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${ordinal}-${months[date.getMonth()]}`;
+        }
+
+        function toggleSelection(service) {
+            const clickedCard = event.currentTarget;
+            
+            if (state.selectedServices.has(service)) {
+                state.selectedServices.delete(service);
+                clickedCard.classList.remove('selected');
+            } else {
+                state.selectedServices.add(service);
+                clickedCard.classList.add('selected');
+            }
+        }
+
+        function proceedToBooking() {
+            if (state.selectedServices.size === 0) {
+                alert('Please select at least one service!');
+                return;
+            }
+
+            const services = Array.from(state.selectedServices).map(s => {
+                const map = {room: 'Room Booking', car: 'Car Service', golf: 'Golf Booking', bus: 'Bus Service'};
+                return map[s];
+            }).join(' + ');
+            document.getElementById('breadcrumb').textContent = `Selected Services: ${services}`;
+
+            generateBookingForms();
+            document.getElementById('homePage').classList.remove('active');
+            document.getElementById('bookingPage').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function goHome() {
+            document.getElementById('bookingPage').classList.remove('active');
+            document.getElementById('homePage').classList.add('active');
+            document.getElementById('previewCard').style.display = 'none';
+            window.scrollTo(0, 0);
+        }
+
+        function generateBookingForms() {
+            const content = document.getElementById('bookingContent');
+            content.innerHTML = '';
+
+            if (state.selectedServices.has('room')) {
+                content.innerHTML += generateRoomForm();
+                setTimeout(() => addGuest(), 100);
+            }
+
+            if (state.selectedServices.has('car')) {
+                content.innerHTML += generateCarForm();
+                setTimeout(() => addCar(), 100);
+            }
+
+            if (state.selectedServices.has('golf')) {
+                content.innerHTML += generateGolfForm();
+                if (!state.selectedServices.has('room')) {
+                    setTimeout(() => addGolfGuest(), 100);
+                }
+            }
+
+            if (state.selectedServices.has('bus')) {
+                content.innerHTML += generateBusForm();
+            }
+
+            if (state.selectedServices.has('room')) {
+                setTimeout(() => syncGuestInfoToOtherServices(), 200);
+            }
+        }
+
+        function generateRoomForm() {
+            return `
+                <div class="card">
+                    <div class="section-title">🛏️ Room Booking Information</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Agent</label>
+                            <select id="agentName">
+                                <option value="">Please Select</option>
+                                <option value="IM">IM</option>
+                                <option value="A03 Tun Naing">A03 Tun Naing</option>
+                                <option value="Wang Kan">Wang Kan</option>
+                                <option value="Chen Cheng Chia">Chen Cheng Chia</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Hotel</label>
+                            <select id="hotelName" onchange="updateRoomTypes()">
+                                <option value="">Please Select</option>
+                                <option value="HIR">HIR</option>
+                                <option value="IC">IC</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Check In Date</label>
+                            <input type="date" id="checkIn" onchange="validateCheckOutDate()">
+                        </div>
+                        <div class="form-group">
+                            <label>Check Out Date</label>
+                            <input type="date" id="checkOut" onchange="validateCheckOutDate()">
+                        </div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border-left: 3px solid var(--secondary); font-size: 0.85rem; line-height: 1.6;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div><strong>Rate Code:</strong> CASBAR</div>
+                            <div><strong>Deposit:</strong> No</div>
+                            <div><strong>Promotion:</strong> <span id="displayPromotion">-</span></div>
+                            <div><strong>Authorizer:</strong> Jian.Xu</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="rateCode" value="CASBAR">
+                    <input type="hidden" id="deposit" value="No">
+                    <input type="hidden" id="authorizer" value="Jian.Xu">
+                    <div class="section-title" style="margin-top: 1rem;">👥 Guest Information</div>
+                    <div id="guestsContainer"></div>
+                    <button class="btn btn-add" onclick="addGuest()">+ Add Guest</button>
+                </div>
+            `;
+        }
+
+        function generateCarForm() {
+            const tipHtml = state.selectedServices.has('room') 
+                ? '<div class="tip-box">Guest name will be auto-filled from room booking</div>' 
+                : '';
+            
+            return `
+                <div class="card">
+                    <div class="section-title">🚗 Car Service Information</div>
+                    ${tipHtml}
+                    <div id="carsContainer"></div>
+                    <button class="btn btn-add" onclick="addCar()">+ Add Car</button>
+                </div>
+            `;
+        }
+
+        function generateGolfForm() {
+            const tipHtml = state.selectedServices.has('room')
+                ? '<div class="tip-box">Guest list will be auto-filled from room booking</div>'
+                : '';
+            
+            const syncButtonHtml = state.selectedServices.has('room')
+                ? '<button class="btn btn-secondary" onclick="autoFillGolfGuests()" style="width: 100%; margin-bottom: 0.625rem;">📋 Sync Room Guests</button>'
+                : '';
+
+            return `
+                <div class="card">
+                    <div class="section-title">⛳ Golf Booking Information</div>
+                    ${tipHtml}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="golfDateTime">
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Pax</label>
+                            <input type="number" id="golfPax" value="4">
+                        </div>
+                        <div class="form-group">
+                            <label>Authorizer</label>
+                            <input type="text" id="golfAuthorizer" value="Jian.Xu">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Payment</label>
+                            <select id="golfPayment">
+                                <option value="pro +600/1000 – post to room">pro +600/1000 – post to room</option>
+                                <option value="Primary Comp">Primary Comp</option>
+                                <option value="GOA">GOA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Note</label>
+                            <input type="text" id="golfNote" value="Casino Rate (If guests show CSN membership)">
+                        </div>
+                    </div>
+                    <div class="section-title" style="margin-top: 1rem;">👥 Guest List</div>
+                    <div id="golfGuestsContainer"></div>
+                    ${syncButtonHtml}
+                    <button class="btn btn-add" onclick="addGolfGuest()">+ Add Guest</button>
+                </div>
+            `;
+        }
+
+        function generateBusForm() {
+            const tipHtml = state.selectedServices.has('room')
+                ? '<div class="tip-box">Passenger name will be auto-filled from room booking</div>'
+                : '';
+            
+            const readonlyAttr = state.selectedServices.has('room') ? 'readonly' : '';
+            const disabledStyle = state.selectedServices.has('room') ? 'background: #f8f9fa;' : '';
+
+            return `
+                <div class="card">
+                    <div class="section-title">🚌 Bus Service Information</div>
+                    ${tipHtml}
+                    
+                    <div class="form-group">
+                        <label>Passenger Name</label>
+                        <input type="text" id="busPassenger" ${readonlyAttr} style="${disabledStyle}">
+                    </div>
+
+                    <div style="margin: 1rem 0;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary); font-size: 0.85rem;">Select Route(s)</label>
+                        <div class="route-buttons">
+                            <button class="route-btn" id="btnHcmToHt" onclick="toggleBusRoute('hcmToHt')">
+                                HCM → HT
+                            </button>
+                            <button class="route-btn" id="btnHtToHcm" onclick="toggleBusRoute('htToHcm')">
+                                HT → HCM
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="busFormHcmToHt" class="bus-route-form">
+                        <h4>📍 HCM → HT Details</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Departure Time</label>
+                                <input type="text" id="timeHcmToHt" placeholder="e.g. 12:00 pm">
+                            </div>
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" id="dateHcmToHt">
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Seats</label>
+                                <input type="number" id="seatsHcmToHt" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="busFormHtToHcm" class="bus-route-form">
+                        <h4>📍 HT → HCM Details</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Departure Time</label>
+                                <input type="text" id="timeHtToHcm" placeholder="e.g. 14:00 pm">
+                            </div>
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" id="dateHtToHcm">
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Seats</label>
+                                <input type="number" id="seatsHtToHcm" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 0.75rem;">
+                        <label>Authorizer</label>
+                        <input type="text" id="busAuthorizer" value="Jian.Xu">
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateRoomTypes() {
+            const hotel = document.getElementById('hotelName')?.value;
+            if (!hotel) return;
+
+            for (let i = 1; i <= state.guestCount; i++) {
+                const select = document.getElementById(`roomType-${i}`);
+                if (select) updateRoomTypeSelect(select, hotel);
+            }
+        }
+
+        function updateRoomTypeSelect(selectElement, hotel) {
+            selectElement.innerHTML = '<option value="">Please Select Room Type</option>';
+            if (!hotel || !roomTypes[hotel]) return;
+
+            roomTypes[hotel].forEach(group => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = `Points: ${group.promotion}`;
+                group.types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = `${type} (${group.promotion} pts)`;
+                    option.dataset.promotion = group.promotion;
+                    optgroup.appendChild(option);
+                });
+                selectElement.appendChild(optgroup);
+            });
+        }
+
+        function addGuest() {
+            state.guestCount++;
+            const container = document.getElementById('guestsContainer');
+            const hotel = document.getElementById('hotelName')?.value;
+            
+            const guestDiv = document.createElement('div');
+            guestDiv.className = 'guest-group';
+            guestDiv.id = `guest-${state.guestCount}`;
+            guestDiv.innerHTML = `
+                <div class="guest-header">
+                    <span class="guest-number">Guest #${state.guestCount}</span>
+                    <button class="remove-btn" onclick="removeGuest(${state.guestCount})">Remove</button>
+                </div>
+                <div class="guest-fields">
+                    <div class="form-group">
+                        <label>PID</label>
+                        <input type="text" id="guestPID-${state.guestCount}" value="New" onchange="syncGuestInfoToOtherServices()">
+                    </div>
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" id="guestName-${state.guestCount}" onchange="syncGuestInfoToOtherServices()">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Type</label>
+                        <select id="roomType-${state.guestCount}" onchange="updatePromotionDisplay()">
+                            <option value="">Please select hotel first</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="sharerSection-${state.guestCount}" style="margin-top: 0.5rem;">
+                    <button class="btn-sharer" onclick="toggleSharer(${state.guestCount})" type="button">
+                        <span class="sharer-icon">👥</span> Add Sharer
+                    </button>
+                </div>
+                <div id="sharerForm-${state.guestCount}" style="display: none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e9ecef;">
+                    <div class="sharer-fields">
+                        <div class="form-group">
+                            <label>Sharer Name</label>
+                            <input type="text" id="sharerName-${state.guestCount}" placeholder="e.g. Lin Shu Li">
+                        </div>
+                        <div class="form-group">
+                            <label>Sharer PID</label>
+                            <input type="text" id="sharerPID-${state.guestCount}" placeholder="e.g. 2222222222">
+                        </div>
+                    </div>
+                    <button class="btn-sharer-remove" onclick="removeSharer(${state.guestCount})" type="button">
+                        Remove Sharer
+                    </button>
+                </div>
+            `;
+            container.appendChild(guestDiv);
+
+            if (hotel) {
+                const select = document.getElementById(`roomType-${state.guestCount}`);
+                updateRoomTypeSelect(select, hotel);
+            }
+        }
+
+        function removeGuest(id) {
+            document.getElementById(`guest-${id}`)?.remove();
+            setTimeout(() => syncGuestInfoToOtherServices(), 100);
+        }
+
+        function validateCheckOutDate() {
+            const checkIn = document.getElementById('checkIn')?.value;
+            const checkOut = document.getElementById('checkOut')?.value;
+            
+            if (checkIn && checkOut) {
+                const checkInDate = new Date(checkIn);
+                const checkOutDate = new Date(checkOut);
+                
+                if (checkOutDate <= checkInDate) {
+                    alert('Check Out Date must be later than Check In Date!');
+                    document.getElementById('checkOut').value = '';
+                    document.getElementById('checkOut').focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function updatePromotionDisplay() {
+            const firstRoomTypeSelect = document.getElementById('roomType-1');
+            if (firstRoomTypeSelect && firstRoomTypeSelect.selectedIndex > 0) {
+                const promotion = firstRoomTypeSelect.options[firstRoomTypeSelect.selectedIndex]?.dataset?.promotion || '-';
+                const displayElement = document.getElementById('displayPromotion');
+                if (displayElement) {
+                    displayElement.textContent = promotion;
+                }
+            }
+        }
+
+        function toggleSharer(guestId) {
+            const sharerForm = document.getElementById(`sharerForm-${guestId}`);
+            const sharerSection = document.getElementById(`sharerSection-${guestId}`);
+            
+            if (sharerForm.style.display === 'none') {
+                sharerForm.style.display = 'block';
+                sharerSection.querySelector('.btn-sharer').innerHTML = '<span class="sharer-icon">👥</span> Sharer Added';
+                sharerSection.querySelector('.btn-sharer').classList.add('active');
+            }
+        }
+
+        function removeSharer(guestId) {
+            const sharerForm = document.getElementById(`sharerForm-${guestId}`);
+            const sharerSection = document.getElementById(`sharerSection-${guestId}`);
+            const sharerNameInput = document.getElementById(`sharerName-${guestId}`);
+            const sharerPIDInput = document.getElementById(`sharerPID-${guestId}`);
+            
+            // Clear inputs
+            sharerNameInput.value = '';
+            sharerPIDInput.value = '';
+            
+            // Hide form
+            sharerForm.style.display = 'none';
+            
+            // Reset button
+            sharerSection.querySelector('.btn-sharer').innerHTML = '<span class="sharer-icon">👥</span> Add Sharer';
+            sharerSection.querySelector('.btn-sharer').classList.remove('active');
+        }
+
+        function syncGuestInfoToOtherServices() {
+            const firstGuestName = document.getElementById('guestName-1')?.value;
+            
+            if (!firstGuestName) return;
+
+            if (state.selectedServices.has('bus')) {
+                const busPassengerField = document.getElementById('busPassenger');
+                if (busPassengerField) {
+                    busPassengerField.value = firstGuestName;
+                }
+            }
+
+            if (state.selectedServices.has('car')) {
+                const carNameField = document.getElementById('carName-1');
+                if (carNameField && !carNameField.value) {
+                    carNameField.value = firstGuestName;
+                }
+            }
+
+            if (state.selectedServices.has('golf')) {
+                autoFillGolfGuests();
+            }
+        }
+
+        function addCar() {
+            state.carCount++;
+            const container = document.getElementById('carsContainer');
+            const carDiv = document.createElement('div');
+            carDiv.className = 'item-group';
+            carDiv.id = `car-${state.carCount}`;
+            carDiv.innerHTML = `
+                <div class="item-header">
+                    <span class="item-number">Car #${state.carCount}</span>
+                    <button class="remove-btn" onclick="removeCar(${state.carCount})">Remove</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Car Type</label>
+                        <select id="carType-${state.carCount}">
+                            <option value="limo">Limo</option>
+                            <option value="sedan">Sedan</option>
+                            <option value="SUV">SUV</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" id="carName-${state.carCount}">
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Guests</label>
+                        <input type="number" id="carGuests-${state.carCount}" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" id="carPhone-${state.carCount}">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" id="carDateTime-${state.carCount}">
+                    </div>
+                    <div class="form-group">
+                        <label>Pick Up Point</label>
+                        <input type="text" id="carPickup-${state.carCount}" placeholder="TSN airport">
+                    </div>
+                    <div class="form-group">
+                        <label>Drop Off Point</label>
+                        <input type="text" id="carDropoff-${state.carCount}" placeholder="Main lobby">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Payment</label>
+                        <select id="carPayment-${state.carCount}">
+                            <option value="Free Comp (If guest enough 2000 points)">Free Comp (2000+ points)</option>
+                            <option value="Guest Comp">Guest Comp</option>
+                            <option value="GOA">GOA</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Authorizer</label>
+                        <input type="text" id="carAuthorizer-${state.carCount}" value="xujian">
+                    </div>
+                </div>
+            `;
+            container.appendChild(carDiv);
+        }
+
+        function removeCar(id) {
+            document.getElementById(`car-${id}`)?.remove();
+        }
+
+        function addGolfGuest() {
+            const count = state.golfGuests.length + 1;
+            state.golfGuests.push(count);
+            const container = document.getElementById('golfGuestsContainer');
+            const guestDiv = document.createElement('div');
+            guestDiv.className = 'guest-group';
+            guestDiv.id = `golfGuest-${count}`;
+            guestDiv.innerHTML = `
+                <div class="guest-header">
+                    <span class="guest-number">Guest #${count}</span>
+                    <button class="remove-btn" onclick="removeGolfGuest(${count})">Remove</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" id="golfGuestName-${count}">
+                    </div>
+                    <div class="form-group">
+                        <label>PID</label>
+                        <input type="text" id="golfGuestPID-${count}" value="New">
+                    </div>
+                </div>
+            `;
+            container.appendChild(guestDiv);
+        }
+
+        function removeGolfGuest(id) {
+            document.getElementById(`golfGuest-${id}`)?.remove();
+            state.golfGuests = state.golfGuests.filter(g => g !== id);
+        }
+
+        function toggleBusRoute(route) {
+            const isActive = state.busRoutes[route];
+            const formId = route === 'hcmToHt' ? 'busFormHcmToHt' : 'busFormHtToHcm';
+            const btnId = route === 'hcmToHt' ? 'btnHcmToHt' : 'btnHtToHcm';
+            
+            if (isActive) {
+                state.busRoutes[route] = false;
+                document.getElementById(formId).style.display = 'none';
+                document.getElementById(btnId).classList.remove('active');
+            } else {
+                state.busRoutes[route] = true;
+                document.getElementById(formId).style.display = 'block';
+                document.getElementById(btnId).classList.add('active');
+            }
+        }
+
+        function autoFillGolfGuests() {
+            document.getElementById('golfGuestsContainer').innerHTML = '';
+            state.golfGuests = [];
+
+            for (let i = 1; i <= state.guestCount; i++) {
+                if (!document.getElementById(`guest-${i}`)) continue;
+                const name = document.getElementById(`guestName-${i}`)?.value;
+                const pid = document.getElementById(`guestPID-${i}`)?.value || 'New';
+
+                if (name) {
+                    addGolfGuest();
+                    const newId = state.golfGuests[state.golfGuests.length - 1];
+                    setTimeout(() => {
+                        document.getElementById(`golfGuestName-${newId}`).value = name;
+                        document.getElementById(`golfGuestPID-${newId}`).value = pid;
+                    }, 50);
+                }
+            }
+
+            if (event && event.target && event.target.textContent.includes('Sync')) {
+                showMessage('✓ Room guests synced successfully!');
+            }
+        }
+
+        function generateAllEmails() {
+            let combinedEmail = '';
+            let subject = '';
+
+            if (state.selectedServices.has('room')) {
+                const roomEmail = generateRoomEmail();
+                const subjectMatch = roomEmail.match(/Subject:\s*(.+?)$/m);
+                subject = subjectMatch ? subjectMatch[1].trim() : 'Booking Request';
+                const roomBody = roomEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                combinedEmail = roomBody;
+            }
+
+            if (state.selectedServices.has('car')) {
+                const carEmail = generateCarEmail();
+                const carBody = carEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                
+                if (combinedEmail) {
+                    combinedEmail += '\n\n---\n\n' + carBody;
+                } else {
+                    combinedEmail = carBody;
+                    const subjectMatch = carEmail.match(/Subject:\s*(.+?)$/m);
+                    subject = subjectMatch ? subjectMatch[1].trim() : 'Car Booking Request';
+                }
+            }
+
+            if (state.selectedServices.has('golf')) {
+                const golfEmail = generateGolfEmail();
+                const golfBody = golfEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                
+                if (combinedEmail) {
+                    combinedEmail += '\n\n---\n\n' + golfBody;
+                } else {
+                    combinedEmail = golfBody;
+                    const subjectMatch = golfEmail.match(/Subject:\s*(.+?)$/m);
+                    subject = subjectMatch ? subjectMatch[1].trim() : 'Golf Booking Request';
+                }
+            }
+
+            if (state.selectedServices.has('bus') && !state.selectedServices.has('room')) {
+                const busEmail = generateBusEmail();
+                const busBody = busEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                
+                if (combinedEmail) {
+                    combinedEmail += '\n\n---\n\n' + busBody;
+                } else {
+                    combinedEmail = busBody;
+                    const subjectMatch = busEmail.match(/Subject:\s*(.+?)$/m);
+                    subject = subjectMatch ? subjectMatch[1].trim() : 'Bus Booking Request';
+                }
+            }
+
+            // 如果有多个服务并且包含订房或高尔夫，重新生成标题
+            if (state.selectedServices.size > 1 && (state.selectedServices.has('room') || state.selectedServices.has('golf'))) {
+                const services = [];
+                if (state.selectedServices.has('room')) services.push('Room');
+                if (state.selectedServices.has('car')) services.push('Car');
+                if (state.selectedServices.has('golf')) services.push('Golf');
+                if (state.selectedServices.has('bus')) services.push('Bus');
+                
+                // 获取第一位客人的实际信息
+                let firstGuestPID = '';
+                let firstGuestName = '';
+                let checkInDate = '';
+                
+                if (state.selectedServices.has('room')) {
+                    // 从订房获取信息
+                    firstGuestPID = document.getElementById('guestPID-1')?.value?.trim() || '';
+                    firstGuestName = document.getElementById('guestName-1')?.value?.trim() || '';
+                    checkInDate = formatDate(document.getElementById('checkIn')?.value);
+                } else if (state.selectedServices.has('golf')) {
+                    // 从高尔夫获取信息
+                    firstGuestPID = document.getElementById('golfGuestPID-1')?.value?.trim() || '';
+                    firstGuestName = document.getElementById('golfGuestName-1')?.value?.trim() || '';
+                    const golfDateTime = document.getElementById('golfDateTime')?.value;
+                    if (golfDateTime) {
+                        checkInDate = formatDate(golfDateTime.split('T')[0]);
+                    }
+                }
+                
+                const agent = document.getElementById('agentName')?.value || '';
+                
+                // 只有当有实际的客人信息时才生成标题
+                if (firstGuestName) {
+                    // 如果PID为空或只包含空格，使用"New"
+                    const displayPID = firstGuestPID || 'New';
+                    subject = `[${agent}] ${displayPID} ${firstGuestName} ${services.join(' + ')} Booking on ${checkInDate}`;
+                }
+            }
+
+            const finalEmail = `Subject: ${subject}\n\n${combinedEmail}`;
+            window.generatedEmail = finalEmail;
+
+            document.getElementById('emailPreview').textContent = finalEmail;
+            document.getElementById('previewCard').style.display = 'block';
+            document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateRoomEmail() {
+            const agent = document.getElementById('agentName')?.value;
+            const hotel = document.getElementById('hotelName')?.value;
+            const authorizer = document.getElementById('authorizer')?.value || 'Jian.Xu';
+            const checkIn = formatDate(document.getElementById('checkIn')?.value);
+            const checkOut = formatDate(document.getElementById('checkOut')?.value);
+            const rateCode = document.getElementById('rateCode')?.value || 'CASBAR';
+            const deposit = document.getElementById('deposit')?.value || 'No';
+
+            let guestLines = [];
+            let roomLines = [];
+            
+            // 获取第一位客人的实际信息
+            let firstGuestPID = document.getElementById('guestPID-1')?.value?.trim() || '';
+            let firstGuestName = document.getElementById('guestName-1')?.value?.trim() || '';
+            
+            // 如果PID为空，使用"New"
+            const displayPID = firstGuestPID || 'New';
+            
+            for (let i = 1; i <= state.guestCount; i++) {
+                if (!document.getElementById(`guest-${i}`)) continue;
+                const name = document.getElementById(`guestName-${i}`)?.value;
+                const pid = document.getElementById(`guestPID-${i}`)?.value || 'New';
+                const roomType = document.getElementById(`roomType-${i}`)?.value;
+                const sharerName = document.getElementById(`sharerName-${i}`)?.value;
+                const sharerPID = document.getElementById(`sharerPID-${i}`)?.value;
+
+                if (name && roomType) {
+                    let guestLine = `${name} - ${pid}`;
+                    // 如果有Sharer名字，就添加Sharer信息
+                    if (sharerName) {
+                        // 如果有Sharer PID就用它，否则用"New"
+                        const finalSharerPID = sharerPID || 'New';
+                        guestLine += `\n(Sharer: ${sharerName} - ${finalSharerPID})`;
+                    }
+                    guestLines.push(guestLine);
+                    roomLines.push(`${name} - ${roomType}`);
+                }
+            }
+
+            // 使用实际的客人名字，如果没有就提示
+            const displayName = firstGuestName || 'Guest';
+            const subject = `[${agent}] ${displayPID} ${displayName} ${hotel} Hotel Room Booking on ${checkIn}`;
+            const firstRoomTypeSelect = document.getElementById('roomType-1');
+            const promotion = firstRoomTypeSelect?.options[firstRoomTypeSelect.selectedIndex]?.dataset?.promotion || '';
+
+            let email = `Subject: ${subject}
+
+Dear RC team,
+
+Kindly assist us make room booking as below:
+
+Guest name: ${guestLines.join('\n')}
+
+Room type: ${hotel}
+${roomLines.join('\n')}
+
+Check in: ${checkIn}
+Check out: ${checkOut}
+Rate code: ${rateCode}
+Promotion: ${promotion}
+Deposit: ${deposit}
+Trip authorizer: ${authorizer}`;
+
+            if (state.selectedServices.has('bus')) {
+                const busPassenger = document.getElementById('busPassenger')?.value;
+                const busAuthorizer = document.getElementById('busAuthorizer')?.value || 'Jian.Xu';
+
+                email += `
+
+Hi @Grand Service
+
+Please help to arrange bus seats as below:
+
+Name: ${busPassenger}
+`;
+
+                if (state.busRoutes.hcmToHt) {
+                    const time = document.getElementById('timeHcmToHt')?.value || '12:00 pm';
+                    const date = formatDateShort(document.getElementById('dateHcmToHt')?.value);
+                    const seats = document.getElementById('seatsHcmToHt')?.value || '5';
+                    
+                    email += `
+Route: HCM to HT ${time} ${date}
+Seats: ${seats}
+`;
+                }
+
+                if (state.busRoutes.htToHcm) {
+                    const time = document.getElementById('timeHtToHcm')?.value || '14:00 pm';
+                    const date = formatDateShort(document.getElementById('dateHtToHcm')?.value);
+                    const seats = document.getElementById('seatsHtToHcm')?.value || '5';
+                    
+                    email += `
+Route: HT to HCM ${time} ${date}
+Seats: ${seats}
+`;
+                }
+
+                email += `
+Authorizer: ${busAuthorizer}`;
+            }
+
+            return email;
+        }
+
+        function generateCarEmail() {
+            let carDetails = [];
+            
+            for (let i = 1; i <= state.carCount; i++) {
+                if (!document.getElementById(`car-${i}`)) continue;
+                const carType = document.getElementById(`carType-${i}`)?.value;
+                const name = document.getElementById(`carName-${i}`)?.value;
+                const guests = document.getElementById(`carGuests-${i}`)?.value;
+                const phone = document.getElementById(`carPhone-${i}`)?.value;
+                const dateTime = document.getElementById(`carDateTime-${i}`)?.value;
+                const pickup = document.getElementById(`carPickup-${i}`)?.value;
+                const dropoff = document.getElementById(`carDropoff-${i}`)?.value;
+
+                if (name && dateTime) {
+                    const dt = new Date(dateTime);
+                    const time = dt.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true});
+                    const date = formatDateShort(dateTime.split('T')[0]);
+
+                    carDetails.push(`${i}, Car Type: ${carType}
+
+Name: ${name}
+
+Number of guests: ${guests}
+
+Phone: ${phone}
+
+Date & time: ${time} ${date}
+
+Pick up point: ${pickup}
+
+Drop off point: ${dropoff}`);
+                }
+            }
+
+            const payment = document.getElementById(`carPayment-1`)?.value || 'Free Comp (If guest enough 2000 points)';
+            const authorizer = document.getElementById(`carAuthorizer-1`)?.value || 'xujian';
+
+            return `Subject: VIP Car Service Request
+
+Dear @Concierge Services
+
+Please kindly arrange a VIP car as the followings:
+
+${carDetails.join('\n\n')}
+
+Payment: ${payment}
+Authorizer: ${authorizer}`;
+        }
+
+        function generateGolfEmail() {
+            const dateTime = document.getElementById('golfDateTime')?.value;
+            const pax = document.getElementById('golfPax')?.value;
+            const payment = document.getElementById('golfPayment')?.value;
+            const authorizer = document.getElementById('golfAuthorizer')?.value;
+            const note = document.getElementById('golfNote')?.value;
+
+            let guestNames = [];
+            state.golfGuests.forEach(id => {
+                const name = document.getElementById(`golfGuestName-${id}`)?.value;
+                const pid = document.getElementById(`golfGuestPID-${id}`)?.value || 'New';
+                if (name) guestNames.push(`${name} - ${pid}`);
+            });
+
+            const dt = new Date(dateTime);
+            const time = dt.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true});
+            const date = formatDateShort(dateTime?.split('T')[0]);
+
+            return `Subject: Golf Booking Request
+
+Dear @The Bluffs Ho Tram - Bookings
+
+Guest's name:
+
+${guestNames.join('\n')}
+
+Date & Time: ${date} ${time}
+
+No. of pax: ${pax}
+
+Note: ${note}
+
+Payment: ${payment}
+
+Authorizer: ${authorizer}`;
+        }
+
+        function generateBusEmail() {
+            const busPassenger = document.getElementById('busPassenger')?.value;
+            const authorizer = document.getElementById('busAuthorizer')?.value || 'Jian.Xu';
+
+            let busContent = `Hi @Grand Service
+
+Please help to arrange bus seats as below:
+
+Name: ${busPassenger}
+`;
+
+            if (state.busRoutes.hcmToHt) {
+                const time = document.getElementById('timeHcmToHt')?.value || '12:00 pm';
+                const date = formatDateShort(document.getElementById('dateHcmToHt')?.value);
+                const seats = document.getElementById('seatsHcmToHt')?.value || '5';
+                
+                busContent += `
+Route: HCM to HT ${time} ${date}
+Seats: ${seats}
+`;
+            }
+
+            if (state.busRoutes.htToHcm) {
+                const time = document.getElementById('timeHtToHcm')?.value || '14:00 pm';
+                const date = formatDateShort(document.getElementById('dateHtToHcm')?.value);
+                const seats = document.getElementById('seatsHtToHcm')?.value || '5';
+                
+                busContent += `
+Route: HT to HCM ${time} ${date}
+Seats: ${seats}
+`;
+            }
+
+            busContent += `
+Authorizer: ${authorizer}`;
+
+            return `Subject: Bus Service Request
+
+${busContent}`;
+        }
+
+        function copyAllEmails() {
+            if (!window.generatedEmail) {
+                alert('Please generate email first!');
+                return;
+            }
+
+            navigator.clipboard.writeText(window.generatedEmail).then(() => {
+                showMessage('✓ Email copied to clipboard!');
+            }).catch(() => {
+                alert('Copy failed. Please copy manually.');
+            });
+        }
+
+        function sendEmail() {
+            if (!window.generatedEmail) {
+                alert('Please generate email first!');
+                return;
+            }
+
+            const subjectMatch = window.generatedEmail.match(/Subject:\s*(.+?)$/m);
+            const subject = subjectMatch ? subjectMatch[1].trim() : 'Booking Request';
+            const body = window.generatedEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+
+            const recipients = [
+                'concierge@thegrandhotram.com',
+                'Front.Desk@thegrandhotram.com',
+                'grandservice@thegrandhotram.com',
+                'HIR.receptionist@thegrandhotram.com',
+                'IC.receptionist@thegrandhotram.com',
+                'Guestrelations.Management@thegrandhotram.com',
+                'rooms.coordinator@thegrandhotram.com'
+            ].join(',');
+
+            const ccRecipients = [
+                'rewards@thegrandhotram.com',
+                'im.gcsea@thegrandhotram.com',
+                'HTR@thegrandhotram.com'
+            ].join(',');
+
+            const mailtoLink = `mailto:${recipients}?cc=${ccRecipients}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            window.location.href = mailtoLink;
+        }
+
+        function showMessage(text) {
+            const msg = document.getElementById('successMessage');
+            msg.textContent = text;
+            msg.style.display = 'block';
+            setTimeout(() => msg.style.display = 'none', 2500);
+        }
+    </script>
+</body>
+</html>
