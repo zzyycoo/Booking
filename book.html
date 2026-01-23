@@ -195,6 +195,203 @@
         </main>
     </div>
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Hotel Service Booking System - Room, Car, Golf & Bus booking management." />
+    <meta name="theme-color" content="#1a4d2e" />
+    <title>Hotel Service Booking System</title>
+
+    <!-- Fonts: performance hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        /* Minimal reset */
+        :root{
+            --primary:#1a4d2e; --primary-light:#2d6a4f; --secondary:#d4af37; --accent:#8b7355;
+            --bg-gradient-start:#f8f9fa; --bg-gradient-end:#e9ecef;
+            --card:#ffffff; --text:#212529; --text-secondary:#6c757d; --border:#dee2e6;
+            --shadow-sm:0 2px 8px rgba(0,0,0,.08); --shadow-md:0 4px 16px rgba(0,0,0,.12); --shadow-lg:0 8px 32px rgba(0,0,0,.16);
+            --success:#28a745; --danger:#dc3545; --warning:#ffc107;
+            --radius:10px;
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{
+            font-family: 'Inter', sans-serif;
+            background:linear-gradient(135deg,var(--bg-gradient-start),var(--bg-gradient-end));
+            color:var(--text);
+            min-height:100vh;
+            padding:1rem;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            line-height:1.4;
+        }
+
+        /* Decorative header band (low impact) */
+        body::before{
+            content:''; position:fixed; top:0; left:0; right:0; height:220px;
+            background:linear-gradient(135deg,var(--primary),var(--primary-light));
+            z-index:-1; opacity:.05;
+        }
+
+        a.skip-link{
+            position:absolute; left:0; top:-40px; background:#000; color:#fff; padding:.5rem .75rem;
+            border-radius:0 0 .25rem .25rem; z-index:1000; text-decoration:none;
+        }
+        a.skip-link:focus{top:1rem; outline:3px solid var(--secondary)}
+
+        .container{max-width:1100px;margin:0 auto; animation:fadeIn .45s ease-out}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+        header.app-header{
+            text-align:center; margin-bottom:1.25rem; padding:1rem; border-radius:16px;
+            background:linear-gradient(135deg,var(--primary),var(--primary-light));
+            color:#fff; box-shadow:var(--shadow-lg);
+        }
+        header.app-header h1{font-family:'Playfair Display',serif;font-weight:700;font-size:1.6rem;letter-spacing:-.4px}
+        .subtitle{opacity:.95;font-weight:500;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px}
+
+        main[role="main"]{display:block}
+
+        .page{display:none}
+        .page.active{display:block}
+
+        .card{
+            background:var(--card); border-radius:var(--radius); padding:1.1rem;
+            border:1px solid var(--border); box-shadow:var(--shadow-md); margin-bottom:1rem;
+            transition:transform .18s ease,box-shadow .18s ease;
+        }
+        .card:focus-within{outline:3px solid rgba(212,175,55,.08)}
+
+        .section-title{
+            font-family:'Playfair Display',serif; color:var(--primary); font-weight:600; font-size:1.1rem;
+            margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem;
+            border-bottom:2px solid var(--secondary); padding-bottom:.4rem;
+        }
+
+        .selection-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
+        .selection-card{
+            padding:1rem; border-radius:12px; text-align:center; cursor:pointer; user-select:none;
+            border:2px solid var(--border); background:linear-gradient(135deg,#fff,#f8f9fa);
+            position:relative; transition:transform .22s ease,box-shadow .22s ease,border-color .22s;
+        }
+        .selection-card:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg); border-color:var(--secondary)}
+        .selection-card.selected{border-color:var(--secondary); background:linear-gradient(135deg,#fff9e6,#fff4d6)}
+        .selection-card h3{font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:.25rem}
+
+        .checkmark{position:absolute; top:.5rem; right:.5rem; width:26px;height:26px;border-radius:50%;display:none; align-items:center; justify-content:center;color:#fff;
+            background:linear-gradient(135deg,var(--secondary),var(--accent)); font-weight:700; font-size:.8rem; box-shadow:0 2px 8px rgba(212,175,55,.35)}
+        .selection-card.selected .checkmark{display:flex; animation:checkPop .28s cubic-bezier(.68,-.55,.265,1.55)}
+        @keyframes checkPop{0%{transform:scale(.2)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+        .actions{display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; margin-top:1rem}
+        .btn{padding:.7rem 1.1rem;border-radius:8px;border:none;font-weight:600;cursor:pointer; font-family:inherit}
+        .btn[type="button"]{display:inline-flex;align-items:center;gap:.5rem}
+        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff}
+        .btn-secondary{background:linear-gradient(135deg,var(--secondary),var(--accent));color:#fff}
+        .btn-send{background:linear-gradient(135deg,var(--success),#218838);color:#fff}
+        .btn-back{background:linear-gradient(135deg,#6c757d,#5a6268);color:#fff}
+        .btn-add{background:transparent;color:var(--primary);border:2px dashed var(--secondary);padding:.6rem;border-radius:8px;width:100%}
+
+        .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem;margin-bottom:.6rem}
+        .form-group{display:flex;flex-direction:column}
+        label{font-weight:500;margin-bottom:.3rem;font-size:.9rem}
+        input,select,textarea{padding:.6rem .8rem;border:2px solid var(--border);border-radius:8px;font-size:.95rem;background:#fff}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:var(--secondary); box-shadow:0 0 0 4px rgba(212,175,55,.08)}
+
+        .email-preview{background:linear-gradient(135deg,#f8f9fa,#fff);padding:1rem;border-radius:8px;font-family:monospace;white-space:pre-wrap;max-height:500px;overflow:auto;border:2px solid var(--border)}
+        .success-message{display:none;padding:1rem;border-radius:8px;margin-top:1rem;background:linear-gradient(135deg,#d4edda,#c3e6cb);color:#155724;border-left:4px solid var(--success);text-align:center;font-weight:600;box-shadow:var(--shadow-sm)}
+        .success-message[aria-hidden="false"]{display:block}
+
+        .breadcrumb{background:#fff;padding:.6rem;border-radius:8px;color:var(--text-secondary);font-weight:500;border:1px solid var(--border);text-align:center;margin-bottom:1rem}
+
+        .route-buttons{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0}
+        .route-btn{padding:.65rem;border-radius:8px;border:2px solid var(--border);background:linear-gradient(135deg,#f8f9fa,#e9ecef);cursor:pointer;font-weight:600}
+        .route-btn.active{background:linear-gradient(135deg,var(--secondary),var(--accent));color:#fff;border-color:var(--secondary)}
+
+        /* responsiveness */
+        @media (max-width:768px){
+            .selection-grid{grid-template-columns:repeat(2,1fr)}
+            header.app-header h1{font-size:1.35rem}
+            .actions{flex-direction:column}
+        }
+
+        @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+        /* small utilities */
+        .muted{color:var(--text-secondary);font-size:.9rem}
+        .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="container">
+        <header class="app-header" role="banner">
+            <h1 id="siteTitle">The Grand Ho Tram</h1>
+            <p class="subtitle">Booking Management System</p>
+        </header>
+
+        <!-- Home Page -->
+        <main id="main" role="main" tabindex="-1">
+            <section id="homePage" class="page active" aria-labelledby="siteTitle">
+                <div class="card" role="region" aria-labelledby="selectServicesTitle">
+                    <div class="section-title" id="selectServicesTitle">Please Select Services to Book</div>
+                    <div class="selection-grid" id="selectionGrid" role="list">
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'room')" onkeydown="cardKeyToggle(event,this,'room')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Room Booking</h3>
+                        </div>
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'car')" onkeydown="cardKeyToggle(event,this,'car')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Car Service</h3>
+                        </div>
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'golf')" onkeydown="cardKeyToggle(event,this,'golf')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Golf Booking</h3>
+                        </div>
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'bus')" onkeydown="cardKeyToggle(event,this,'bus')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Bus Service</h3>
+                        </div>
+                    </div>
+
+                    <div class="actions" aria-hidden="false">
+                        <button type="button" class="btn btn-primary" onclick="proceedToBooking()" aria-label="Continue to booking">Continue Booking →</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Booking Page -->
+            <section id="bookingPage" class="page" aria-labelledby="bookingTitle">
+                <div id="bookingWrapper">
+                    <div class="breadcrumb" id="breadcrumb" aria-live="polite"></div>
+                    <div id="bookingContent" aria-live="polite"></div>
+
+                    <div class="actions" style="margin-top:.75rem">
+                        <button type="button" class="btn btn-back" onclick="goHome()">← Back to Home</button>
+                        <button type="button" class="btn btn-primary" id="btnGenerate" onclick="generateAllEmails()">✉️ Generate Email</button>
+                        <button type="button" class="btn btn-secondary" id="btnCopy" onclick="copyAllEmails()">📋 Copy</button>
+                        <button type="button" class="btn btn-send" id="btnSend" onclick="sendEmail()">📨 Send Email</button>
+                    </div>
+
+                    <div class="success-message" id="successMessage" role="status" aria-live="polite" aria-hidden="true"></div>
+
+                    <div class="card" id="previewCard" style="display:none; margin-top:1.25rem;">
+                        <div class="section-title">👀 Email Preview</div>
+                        <div class="email-preview" id="emailPreview" role="region" aria-live="polite"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
     <script>
         /* ======== State & Cached Elements ======== */
         const state = {
@@ -226,7 +423,7 @@
             const d = safeParseDate(dateStr);
             if(!d) return '';
             const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            return \\`${String(d.getDate()).padStart(2,'0')}-${months[d.getMonth()]}-${d.getFullYear()}\ackquote;
+            return `${String(d.getDate()).padStart(2,'0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
         }
         function formatDateShort(dateStr){
             const d = safeParseDate(dateStr);
@@ -234,7 +431,7 @@
             const day = d.getDate();
             const ordinal = day + (day===1?'st':day===2?'nd':day===3?'rd':'th');
             const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            return \\`${ordinal}-${months[d.getMonth()]}\ackquote;
+            return `${ordinal}-${months[d.getMonth()]}`;
         }
 
         /* ======== Selection (keyboard accessible) ======== */
@@ -547,7 +744,7 @@
             ROOM_TYPES[hotel].forEach(group => {
                 group.types.forEach(t => {
                     const opt = document.createElement('option');
-                    opt.value = t; opt.textContent = \\`${t} - ${group.promotion}\ackquote;
+                    opt.value = t; opt.textContent = `${t} - ${group.promotion}`;
                     select.appendChild(opt);
                 });
             });
@@ -652,11 +849,13 @@
 
         // Accessibility: focus management when page changes
         document.addEventListener('keydown', (e) => {
-            if(e.key === 'Escape'){ 
+            if(e.key === 'Escape'){
                 // escape to go home if booking page active
                 if($bookingPage.classList.contains('active')) goHome();
             }
         });
     </script>
+</body>
+</html>
 </body>
 </html>
