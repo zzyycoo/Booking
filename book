@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="Hotel Service Booking System - Room, Car, Golf & Bus booking management." />
+    <meta name="theme-color" content="#1a4d2e" />
+    <title>Hotel Service Booking System</title>
+
+    <!-- Fonts: performance hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+
+    <style>
+        /* Minimal reset */
+        :root{
+            --primary:#1a4d2e; --primary-light:#2d6a4f; --secondary:#d4af37; --accent:#8b7355;
+            --bg-gradient-start:#f8f9fa; --bg-gradient-end:#e9ecef;
+            --card:#ffffff; --text:#212529; --text-secondary:#6c757d; --border:#dee2e6;
+            --shadow-sm:0 2px 8px rgba(0,0,0,.08); --shadow-md:0 4px 16px rgba(0,0,0,.12); --shadow-lg:0 8px 32px rgba(0,0,0,.16);
+            --success:#28a745; --danger:#dc3545; --warning:#ffc107;
+            --radius:10px;
+        }
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        html,body{height:100%}
+        body{
+            font-family: 'Inter', sans-serif;
+            background:linear-gradient(135deg,var(--bg-gradient-start),var(--bg-gradient-end));
+            color:var(--text);
+            min-height:100vh;
+            padding:1rem;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            line-height:1.4;
+        }
+
+        /* Decorative header band (low impact) */
+        body::before{
+            content:''; position:fixed; top:0; left:0; right:0; height:220px;
+            background:linear-gradient(135deg,var(--primary),var(--primary-light));
+            z-index:-1; opacity:.05;
+        }
+
+        a.skip-link{
+            position:absolute; left:0; top:-40px; background:#000; color:#fff; padding:.5rem .75rem;
+            border-radius:0 0 .25rem .25rem; z-index:1000; text-decoration:none;
+        }
+        a.skip-link:focus{top:1rem; outline:3px solid var(--secondary)}
+
+        .container{max-width:1100px;margin:0 auto; animation:fadeIn .45s ease-out}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+        header.app-header{
+            text-align:center; margin-bottom:1.25rem; padding:1rem; border-radius:16px;
+            background:linear-gradient(135deg,var(--primary),var(--primary-light));
+            color:#fff; box-shadow:var(--shadow-lg);
+        }
+        header.app-header h1{font-family:'Playfair Display',serif;font-weight:700;font-size:1.6rem;letter-spacing:-.4px}
+        .subtitle{opacity:.95;font-weight:500;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px}
+
+        main[role="main"]{display:block}
+
+        .page{display:none}
+        .page.active{display:block}
+
+        .card{
+            background:var(--card); border-radius:var(--radius); padding:1.1rem;
+            border:1px solid var(--border); box-shadow:var(--shadow-md); margin-bottom:1rem;
+            transition:transform .18s ease,box-shadow .18s ease;
+        }
+        .card:focus-within{outline:3px solid rgba(212,175,55,.08)}
+
+        .section-title{
+            font-family:'Playfair Display',serif; color:var(--primary); font-weight:600; font-size:1.1rem;
+            margin-bottom:.75rem; display:flex; align-items:center; gap:.5rem;
+            border-bottom:2px solid var(--secondary); padding-bottom:.4rem;
+        }
+
+        .selection-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
+        .selection-card{
+            padding:1rem; border-radius:12px; text-align:center; cursor:pointer; user-select:none;
+            border:2px solid var(--border); background:linear-gradient(135deg,#fff,#f8f9fa);
+            position:relative; transition:transform .22s ease,box-shadow .22s ease,border-color .22s;
+        }
+        .selection-card:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg); border-color:var(--secondary)}
+        .selection-card.selected{border-color:var(--secondary); background:linear-gradient(135deg,#fff9e6,#fff4d6)}
+        .selection-card h3{font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:.25rem}
+
+        .checkmark{position:absolute; top:.5rem; right:.5rem; width:26px;height:26px;border-radius:50%;display:none; align-items:center; justify-content:center;color:#fff;
+            background:linear-gradient(135deg,var(--secondary),var(--accent)); font-weight:700; font-size:.8rem; box-shadow:0 2px 8px rgba(212,175,55,.35)}
+        .selection-card.selected .checkmark{display:flex; animation:checkPop .28s cubic-bezier(.68,-.55,.265,1.55)}
+        @keyframes checkPop{0%{transform:scale(.2)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+        .actions{display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; margin-top:1rem}
+        .btn{padding:.7rem 1.1rem;border-radius:8px;border:none;font-weight:600;cursor:pointer; font-family:inherit}
+        .btn[type="button"]{display:inline-flex;align-items:center;gap:.5rem}
+        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff}
+        .btn-secondary{background:linear-gradient(135deg,var(--secondary),var(--accent));color:#fff}
+        .btn-send{background:linear-gradient(135deg,var(--success),#218838);color:#fff}
+        .btn-back{background:linear-gradient(135deg,#6c757d,#5a6268);color:#fff}
+        .btn-add{background:transparent;color:var(--primary);border:2px dashed var(--secondary);padding:.6rem;border-radius:8px;width:100%}
+
+        .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.6rem;margin-bottom:.6rem}
+        .form-group{display:flex;flex-direction:column}
+        label{font-weight:500;margin-bottom:.3rem;font-size:.9rem}
+        input,select,textarea{padding:.6rem .8rem;border:2px solid var(--border);border-radius:8px;font-size:.95rem;background:#fff}
+        input:focus,select:focus,textarea:focus{outline:none;border-color:var(--secondary); box-shadow:0 0 0 4px rgba(212,175,55,.08)}
+
+        .email-preview{background:linear-gradient(135deg,#f8f9fa,#fff);padding:1rem;border-radius:8px;font-family:monospace;white-space:pre-wrap;max-height:500px;overflow:auto;border:2px solid var(--border)}
+        .success-message{display:none;padding:1rem;border-radius:8px;margin-top:1rem;background:linear-gradient(135deg,#d4edda,#c3e6cb);color:#155724;border-left:4px solid var(--success);text-align:center;font-weight:600;box-shadow:var(--shadow-sm)}
+        .success-message[aria-hidden="false"]{display:block}
+
+        .breadcrumb{background:#fff;padding:.6rem;border-radius:8px;color:var(--text-secondary);font-weight:500;border:1px solid var(--border);text-align:center;margin-bottom:1rem}
+
+        .route-buttons{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:1rem 0}
+        .route-btn{padding:.65rem;border-radius:8px;border:2px solid var(--border);background:linear-gradient(135deg,#f8f9fa,#e9ecef);cursor:pointer;font-weight:600}
+        .route-btn.active{background:linear-gradient(135deg,var(--secondary),var(--accent));color:#fff;border-color:var(--secondary)}
+
+        /* responsiveness */
+        @media (max-width:768px){
+            .selection-grid{grid-template-columns:repeat(2,1fr)}
+            header.app-header h1{font-size:1.35rem}
+            .actions{flex-direction:column}
+        }
+
+        @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+        /* small utilities */
+        .muted{color:var(--text-secondary);font-size:.9rem}
+        .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <div class="container">
+        <header class="app-header" role="banner">
+            <h1 id="siteTitle">The Grand Ho Tram</h1>
+            <p class="subtitle">Booking Management System</p>
+        </header>
+
+        <!-- Home Page -->
+        <main id="main" role="main" tabindex="-1">
+            <section id="homePage" class="page active" aria-labelledby="siteTitle">
+                <div class="card" role="region" aria-labelledby="selectServicesTitle">
+                    <div class="section-title" id="selectServicesTitle">Please Select Services to Book</div>
+                    <div class="selection-grid" id="selectionGrid" role="list">
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'room')" onkeydown="cardKeyToggle(event,this,'room')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Room Booking</h3>
+                        </div>
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'car')" onkeydown="cardKeyToggle(event,this,'car')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Car Service</h3>
+                        </div>
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'golf')" onkeydown="cardKeyToggle(event,this,'golf')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Golf Booking</h3>
+                        </div>
+                        <div class="selection-card" role="listitem" tabindex="0" onclick="toggleSelection(this,'bus')" onkeydown="cardKeyToggle(event,this,'bus')">
+                            <div class="checkmark" aria-hidden="true">✓</div>
+                            <h3>Bus Service</h3>
+                        </div>
+                    </div>
+
+                    <div class="actions" aria-hidden="false">
+                        <button type="button" class="btn btn-primary" onclick="proceedToBooking()" aria-label="Continue to booking">Continue Booking →</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Booking Page -->
+            <section id="bookingPage" class="page" aria-labelledby="bookingTitle">
+                <div id="bookingWrapper">
+                    <div class="breadcrumb" id="breadcrumb" aria-live="polite"></div>
+                    <div id="bookingContent" aria-live="polite"></div>
+
+                    <div class="actions" style="margin-top:.75rem">
+                        <button type="button" class="btn btn-back" onclick="goHome()">← Back to Home</button>
+                        <button type="button" class="btn btn-primary" id="btnGenerate" onclick="generateAllEmails()">✉️ Generate Email</button>
+                        <button type="button" class="btn btn-secondary" id="btnCopy" onclick="copyAllEmails()">📋 Copy</button>
+                        <button type="button" class="btn btn-send" id="btnSend" onclick="sendEmail()">📨 Send Email</button>
+                    </div>
+
+                    <div class="success-message" id="successMessage" role="status" aria-live="polite" aria-hidden="true"></div>
+
+                    <div class="card" id="previewCard" style="display:none; margin-top:1.25rem;">
+                        <div class="section-title">👀 Email Preview</div>
+                        <div class="email-preview" id="emailPreview" role="region" aria-live="polite"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        /* ======== State & Cached Elements ======== */
+        const state = {
+            selectedServices: new Set(),
+            guestCount: 0,
+            carCount: 0,
+            golfGuests: [],
+            busRoutes: { hcmToHt: false, htToHcm: false }
+        };
+
+        // Cache frequently accessed nodes
+        const $homePage = document.getElementById('homePage');
+        const $bookingPage = document.getElementById('bookingPage');
+        const $breadcrumb = document.getElementById('breadcrumb');
+        const $bookingContent = document.getElementById('bookingContent');
+        const $previewCard = document.getElementById('previewCard');
+        const $emailPreview = document.getElementById('emailPreview');
+        const $successMessage = document.getElementById('successMessage');
+
+        /* ======== Utility helpers ======== */
+        function safeParseDate(dateStr){
+            // Expect dateStr in "YYYY-MM-DD" input value
+            if(!dateStr) return null;
+            const parts = dateStr.split('-').map(Number);
+            if(parts.length !== 3) return null;
+            return new Date(parts[0], parts[1]-1, parts[2]);
+        }
+        function formatDate(dateStr){
+            const d = safeParseDate(dateStr);
+            if(!d) return '';
+            const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return \\`${String(d.getDate()).padStart(2,'0')}-${months[d.getMonth()]}-${d.getFullYear()}\ackquote;
+        }
+        function formatDateShort(dateStr){
+            const d = safeParseDate(dateStr);
+            if(!d) return '';
+            const day = d.getDate();
+            const ordinal = day + (day===1?'st':day===2?'nd':day===3?'rd':'th');
+            const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return \\`${ordinal}-${months[d.getMonth()]}\ackquote;
+        }
+
+        /* ======== Selection (keyboard accessible) ======== */
+        function cardKeyToggle(e, el, service){
+            if(e.key === 'Enter' || e.key === ' '){
+                e.preventDefault();
+                toggleSelection(el, service);
+            }
+        }
+
+        function toggleSelection(el, service){
+            if(!el || !service) return;
+            const wasSelected = state.selectedServices.has(service);
+            if(wasSelected){
+                state.selectedServices.delete(service);
+                el.classList.remove('selected');
+                el.setAttribute('aria-checked','false');
+            } else {
+                state.selectedServices.add(service);
+                el.classList.add('selected');
+                el.setAttribute('aria-checked','true');
+            }
+        }
+
+        /* ======== Navigation ======== */
+        function proceedToBooking(){
+            if(state.selectedServices.size === 0){
+                alert('Please select at least one service!');
+                return;
+            }
+            const map = {room:'Room Booking', car:'Car Service', golf:'Golf Booking', bus:'Bus Service'};
+            const services = Array.from(state.selectedServices).map(s => map[s]).join(' + ');
+            $breadcrumb.textContent = `Selected Services: ${services}`;
+
+            generateBookingForms();
+            $homePage.classList.remove('active');
+            $bookingPage.classList.add('active');
+            window.scrollTo({top:0,behavior:'smooth'});
+            // move focus to booking content area for screen readers
+            setTimeout(()=> $bookingContent.focus?.(), 200);
+        }
+
+        function goHome(){
+            $bookingPage.classList.remove('active');
+            $homePage.classList.add('active');
+            $previewCard.style.display = 'none';
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
+        /* ======== Booking form generation ======== */
+        // Keep data used for room types/promotions in a small constant to avoid global pollution
+        const ROOM_TYPES = {
+            HIR:[
+                {types:['TSTS','TSTN','KPUS','TPUN','TPU'], promotion:218},
+                {types:['TVUN','TVUS','KLON','KLOS'], promotion:268},
+                {types:['KOTS','TOTS'], promotion:388},
+                {types:['XOTN','XOTS','XFTN','XFTS','XLOS','XCIS'], promotion:888},
+                {types:['X2ON','X2OS','XDBS'], promotion:1888},
+                {types:['XVUN','XVUS'], promotion:2188},
+                {types:['X2AN','X2AS'], promotion:3188}
+            ],
+            IC:[
+                {types:['KDXN','KDXS','TDXN','TDXS','KLON','KLOS','TLON','TLOS'], promotion:288},
+                {types:['KOTS','KOTN','TOTS','TOTN'], promotion:288},
+                {types:['KVUS','KVUN','TVUS','TVUN'], promotion:388},
+                {types:['XEXS','XEXN','XOTS','XOTN','XVUS','XVUN'], promotion:3188},
+                {types:['XFTS','XFTN','XLOS','XLON'], promotion:3888}
+            ]
+        };
+
+        function generateBookingForms(){
+            $bookingContent.innerHTML = '';
+            // Room
+            if(state.selectedServices.has('room')){
+                $bookingContent.insertAdjacentHTML('beforeend', generateRoomForm());
+            }
+            if(state.selectedServices.has('car')){
+                $bookingContent.insertAdjacentHTML('beforeend', generateCarForm());
+            }
+            if(state.selectedServices.has('golf')){
+                $bookingContent.insertAdjacentHTML('beforeend', generateGolfForm());
+            }
+            if(state.selectedServices.has('bus')){
+                $bookingContent.insertAdjacentHTML('beforeend', generateBusForm());
+            }
+            // After injecting HTML, attach any needed event handlers or initial items
+            // Keep initialization minimal and robust:
+            if(state.selectedServices.has('room')) addGuest();
+            if(state.selectedServices.has('car')) addCar();
+            if(state.selectedServices.has('golf')){
+                if(!state.selectedServices.has('room')) addGolfGuest();
+            }
+            // Small sync delay to allow elements to exist in DOM
+            if(state.selectedServices.has('room')) setTimeout(syncGuestInfoToOtherServices, 150);
+        }
+
+        function generateRoomForm(){
+            return `
+                <div class="card" id="roomCard" role="region" aria-labelledby="roomTitle">
+                    <div class="section-title" id="roomTitle">🛏️ Room Booking Information</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="agentName">Agent</label>
+                            <select id="agentName">
+                                <option value="">Please Select</option>
+                                <option>IM</option>
+                                <option>A03 Tun Naing</option>
+                                <option>Wang Kan</option>
+                                <option>Chen Cheng Chia</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="hotelName">Hotel</label>
+                            <select id="hotelName" onchange="updateRoomTypes()">
+                                <option value="">Please Select</option>
+                                <option value="HIR">HIR</option>
+                                <option value="IC">IC</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="checkIn">Check In Date</label>
+                            <input id="checkIn" type="date" onchange="validateCheckOutDate()" />
+                        </div>
+                        <div class="form-group">
+                            <label for="checkOut">Check Out Date</label>
+                            <input id="checkOut" type="date" onchange="validateCheckOutDate()" />
+                        </div>
+                    </div>
+
+                    <div style="background:linear-gradient(135deg,#f8f9fa,#ffffff);padding:.75rem;border-radius:8px;margin:.75rem 0;border-left:3px solid var(--secondary)">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                            <div><strong>Rate Code:</strong> CASBAR</div>
+                            <div><strong>Deposit:</strong> No</div>
+                            <div><strong>Promotion:</strong> <span id="displayPromotion">-</span></div>
+                            <div><strong>Authorizer:</strong> Jian.Xu</div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="rateCode" value="CASBAR" />
+                    <input type="hidden" id="deposit" value="No" />
+                    <input type="hidden" id="authorizer" value="Jian.Xu" />
+
+                    <div class="section-title" style="margin-top:1rem">👥 Guest Information</div>
+                    <div id="guestsContainer" aria-live="polite"></div>
+                    <button type="button" class="btn btn-add" onclick="addGuest()">+ Add Guest</button>
+                </div>
+            `;
+        }
+
+        function generateCarForm(){
+            return `
+                <div class="card" id="carCard" role="region" aria-labelledby="carTitle">
+                    <div class="section-title" id="carTitle">🚗 Car Service</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="carPickup">Pickup Date</label>
+                            <input id="carPickup" type="date" />
+                        </div>
+                        <div class="form-group">
+                            <label for="carReturn">Return Date</label>
+                            <input id="carReturn" type="date" />
+                        </div>
+                    </div>
+                    <div id="carsContainer"></div>
+                    <button type="button" class="btn btn-add" onclick="addCar()">+ Add Car</button>
+                </div>
+            `;
+        }
+
+        function generateGolfForm(){
+            return `
+                <div class="card" id="golfCard" role="region" aria-labelledby="golfTitle">
+                    <div class="section-title" id="golfTitle">⛳ Golf Booking</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="golfDate">Golf Date</label>
+                            <input id="golfDate" type="date" />
+                        </div>
+                        <div class="form-group">
+                            <label for="golfCourse">Course</label>
+                            <select id="golfCourse"><option value="">Please Select</option><option>Course A</option><option>Course B</option></select>
+                        </div>
+                    </div>
+                    <div id="golfGuestsContainer"></div>
+                    <button type="button" class="btn btn-add" onclick="addGolfGuest()">+ Add Golf Guest</button>
+                </div>
+            `;
+        }
+
+        function generateBusForm(){
+            return `
+                <div class="card" id="busCard" role="region" aria-labelledby="busTitle">
+                    <div class="section-title" id="busTitle">🚌 Bus Service</div>
+                    <div class="tip-box" style="display:flex;align-items:center;gap:.5rem">Select routes</div>
+                    <div class="route-buttons">
+                        <button type="button" class="route-btn" id="routeHcmToHt" onclick="toggleRoute('hcmToHt', this)">HCM → HT</button>
+                        <button type="button" class="route-btn" id="routeHtToHcm" onclick="toggleRoute('htToHcm', this)">HT → HCM</button>
+                    </div>
+                    <div class="bus-route-form" id="busRouteForm"></div>
+                </div>
+            `;
+        }
+
+        /* ======== Dynamic helpers (guest/car/golf management) ======== */
+        function addGuest(){
+            state.guestCount++;
+            const id = `guest-${Date.now()}`;
+            const html = `
+                <fieldset class="guest-group" id="${id}">
+                    <legend class="guest-header">
+                        <span class="guest-number">Guest ${state.guestCount}</span>
+                        <button type="button" class="remove-btn" onclick="removeElement('${id}')">Remove</button>
+                    </legend>
+                    <div class="guest-fields">
+                        <div class="form-group"><label for="${id}-name">Name</label><input id="${id}-name" type="text" /></div>
+                        <div class="form-group"><label for="${id}-passport">Passport</label><input id="${id}-passport" type="text" /></div>
+                        <div class="form-group"><label for="${id}-roomType">Room Type</label><select id="${id}-roomType"><option value="">Select</option></select></div>
+                        <div class="form-group"><label for="${id}-rate">Rate</label><input id="${id}-rate" type="text" disabled /></div>
+                    </div>
+                </fieldset>
+            `;
+            $bookingContent.querySelector('#guestsContainer')?.insertAdjacentHTML('beforeend', html);
+            // Update room type options if hotel selected
+            updateRoomTypesForGuest(id);
+        }
+
+        function removeElement(id){
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.parentNode.removeChild(el);
+        }
+
+        function addCar(){
+            state.carCount++;
+            const id = `car-${Date.now()}`;
+            const html = `
+                <fieldset class="item-group" id="${id}">
+                    <legend class="item-header">
+                        <span class="item-number">Car ${state.carCount}</span>
+                        <button type="button" class="remove-btn" onclick="removeElement('${id}')">Remove</button>
+                    </legend>
+                    <div class="form-row">
+                        <div class="form-group"><label for="${id}-driver">Driver</label><input id="${id}-driver" type="text" /></div>
+                        <div class="form-group"><label for="${id}-carType">Car Type</label><select id="${id}-carType"><option>Standard</option><option>SUV</option></select></div>
+                    </div>
+                </fieldset>
+            `;
+            $bookingContent.querySelector('#carsContainer')?.insertAdjacentHTML('beforeend', html);
+        }
+
+        function addGolfGuest(){
+            const id = `golf-${Date.now()}`;
+            const html = `
+                <fieldset class="item-group" id="${id}">
+                    <legend class="item-header">
+                        <span class="item-number">Golf Guest</span>
+                        <button type="button" class="remove-btn" onclick="removeElement('${id}')">Remove</button>
+                    </legend>
+                    <div class="form-row">
+                        <div class="form-group"><label for="${id}-name">Name</label><input id="${id}-name" type="text" /></div>
+                        <div class="form-group"><label for="${id}-handicap">Handicap</label><input id="${id}-handicap" type="text" /></div>
+                    </div>
+                </fieldset>
+            `;
+            $bookingContent.querySelector('#golfGuestsContainer')?.insertAdjacentHTML('beforeend', html);
+        }
+
+        function toggleRoute(routeKey, btn){
+            state.busRoutes[routeKey] = !state.busRoutes[routeKey];
+            btn.classList.toggle('active', !!state.busRoutes[routeKey]);
+            renderBusRouteForm();
+        }
+
+        function renderBusRouteForm(){
+            const el = document.getElementById('busRouteForm');
+            if(!el) return;
+            el.innerHTML = '';
+            if(state.busRoutes.hcmToHt){
+                el.insertAdjacentHTML('beforeend', `<div class="bus-route-form" id="hcmToHtForm"><h4>HCM → HT</h4><div class="form-row"><div class="form-group"><label>Pickup</label><input type="date" /></div></div></div>`);
+            }
+            if(state.busRoutes.htToHcm){
+                el.insertAdjacentHTML('beforeend', `<div class="bus-route-form" id="htToHcmForm"><h4>HT → HCM</h4><div class="form-row"><div class="form-group"><label>Return</label><input type="date" /></div></div></div>`);
+            }
+        }
+
+        /* ======== Room type / promotion helpers ======== */
+        function updateRoomTypes(){
+            // Populate room type selects in guest entries based on selected hotel
+            const hotel = document.getElementById('hotelName')?.value;
+            const promotionDisplay = document.getElementById('displayPromotion');
+            if(!hotel || !ROOM_TYPES[hotel]) {
+                promotionDisplay && (promotionDisplay.textContent = '-');
+            } else {
+                promotionDisplay && (promotionDisplay.textContent = `From ${ROOM_TYPES[hotel][0].promotion}`);
+            }
+            // Update each guest's room type select
+            const guests = document.querySelectorAll('#guestsContainer .guest-group');
+            guests.forEach(g => updateRoomTypesForGuest(g.id));
+        }
+
+        function updateRoomTypesForGuest(guestId){
+            const hotel = document.getElementById('hotelName')?.value;
+            const select = document.querySelector(`#${guestId} select[id$="-roomType"]`);
+            if(!select) return;
+            select.innerHTML = '<option value="">Select</option>';
+            if(!hotel || !ROOM_TYPES[hotel]) return;
+            ROOM_TYPES[hotel].forEach(group => {
+                group.types.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t; opt.textContent = \\`${t} - ${group.promotion}\ackquote;
+                    select.appendChild(opt);
+                });
+            });
+        }
+
+        function validateCheckOutDate(){
+            const checkIn = document.getElementById('checkIn')?.value;
+            const checkOut = document.getElementById('checkOut')?.value;
+            if(checkIn && checkOut){
+                const inDate = safeParseDate(checkIn), outDate = safeParseDate(checkOut);
+                if(inDate && outDate && outDate <= inDate){
+                    alert('Check-out must be after check-in.');
+                    document.getElementById('checkOut').value = '';
+                }
+            }
+        }
+
+        /* ======== Email generation / copy / send (simple implementations) ======== */
+        function generateAllEmails(){
+            // Simplified generator: collect key fields to compose a textual email preview
+            let lines = [];
+            lines.push('Booking Summary');
+            lines.push('================');
+            if(state.selectedServices.has('room')){
+                const hotel = document.getElementById('hotelName')?.value || '-';
+                const ci = document.getElementById('checkIn')?.value || '-';
+                const co = document.getElementById('checkOut')?.value || '-';
+                lines.push(`Room: ${hotel} | Check-in: ${formatDate(ci)} | Check-out: ${formatDate(co)}`);
+            }
+            if(state.selectedServices.has('car')){
+                const pickup = document.getElementById('carPickup')?.value || '-';
+                const ret = document.getElementById('carReturn')?.value || '-';
+                lines.push(`Car: Pickup ${formatDate(pickup)} | Return ${formatDate(ret)}`);
+            }
+            if(state.selectedServices.has('golf')){
+                const gd = document.getElementById('golfDate')?.value || '-';
+                lines.push(`Golf: Date ${formatDate(gd)}`);
+            }
+            if(state.selectedServices.has('bus')){
+                const routes = Object.keys(state.busRoutes).filter(k => state.busRoutes[k]).join(', ') || '-';
+                lines.push(`Bus Routes: ${routes}`);
+            }
+
+            // Guests summary
+            const guests = document.querySelectorAll('#guestsContainer .guest-group');
+            if(guests.length){
+                lines.push('');
+                lines.push('Guests:');
+                guests.forEach((g, idx) => {
+                    const name = g.querySelector('input[id$="-name"]')?.value || 'N/A';
+                    const p = g.querySelector('input[id$="-passport"]')?.value || '';
+                    lines.push(`${idx+1}. ${name}${p?` (${p})`:''}`);
+                });
+            }
+
+            $emailPreview.textContent = lines.join('\n');
+            $previewCard.style.display = 'block';
+            $successMessage.setAttribute('aria-hidden','true');
+        }
+
+        function copyAllEmails(){
+            const text = $emailPreview.textContent || '';
+            if(!text) { alert('Please generate email first.'); return; }
+            navigator.clipboard?.writeText(text).then(()=>{
+                showSuccess('Email copied to clipboard.');
+            }).catch(()=> {
+                alert('Copy failed. Please select and copy manually.');
+            });
+        }
+
+        function sendEmail(){
+            // Placeholder: show success message rather than real sending
+            showSuccess('Pretend sending email... Done.');
+        }
+
+        /* ======== UI helpers ======== */
+        function showSuccess(msg){
+            $successMessage.textContent = msg;
+            $successMessage.setAttribute('aria-hidden','false');
+            $successMessage.style.display = 'block';
+            setTimeout(()=>{
+                $successMessage.setAttribute('aria-hidden','true');
+                $successMessage.style.display = 'none';
+            }, 3500);
+        }
+
+        // Expose a few globals needed by inline handlers (kept minimal)
+        window.toggleSelection = toggleSelection;
+        window.cardKeyToggle = cardKeyToggle;
+        window.proceedToBooking = proceedToBooking;
+        window.goHome = goHome;
+        window.generateAllEmails = generateAllEmails;
+        window.copyAllEmails = copyAllEmails;
+        window.sendEmail = sendEmail;
+        window.addGuest = addGuest;
+        window.addCar = addCar;
+        window.addGolfGuest = addGolfGuest;
+        window.removeElement = removeElement;
+        window.toggleRoute = toggleRoute;
+        window.updateRoomTypes = updateRoomTypes;
+        window.validateCheckOutDate = validateCheckOutDate;
+
+        // Accessibility: focus management when page changes
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'Escape'){ 
+                // escape to go home if booking page active
+                if($bookingPage.classList.contains('active')) goHome();
+            }
+        });
+    </script>
+</body>
+</html>
