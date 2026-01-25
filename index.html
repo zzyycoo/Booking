@@ -690,6 +690,33 @@
             flex-wrap: wrap;
         }
 
+        /* Quick service add buttons */
+        .quick-service-btn {
+            padding: 0.375rem 0.875rem;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quick-service-btn:hover {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            border-color: var(--primary);
+            border-style: solid;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-service-btn:active {
+            transform: translateY(0);
+        }
+
         /* Guest fields responsive grid */
         .guest-fields {
             display: grid;
@@ -1053,6 +1080,16 @@
                     <div class="section-title" style="margin-top: 1rem;">👥 Guest Information</div>
                     <div id="guestsContainer"></div>
                     <button class="btn btn-add" onclick="addGuest()">+ Add Guest</button>
+                    
+                    <!-- Quick Add Services -->
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Need other services?</div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            ${!state.selectedServices.has('car') ? '<button class="quick-service-btn" onclick="addQuickService(\'car\')">+ Car Service</button>' : ''}
+                            ${!state.selectedServices.has('golf') ? '<button class="quick-service-btn" onclick="addQuickService(\'golf\')">+ Golf Booking</button>' : ''}
+                            ${!state.selectedServices.has('bus') ? '<button class="quick-service-btn" onclick="addQuickService(\'bus\')">+ Bus Service</button>' : ''}
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -1480,6 +1517,83 @@
             document.getElementById(inputId).value = location;
         }
 
+        // 快捷添加服务功能
+        function addQuickService(service) {
+            if (state.selectedServices.has(service)) {
+                alert('This service is already added!');
+                return;
+            }
+
+            // 添加服务到已选服务
+            state.selectedServices.add(service);
+
+            // 更新breadcrumb
+            const services = Array.from(state.selectedServices).map(s => {
+                const map = { room: 'Room Booking', car: 'Car Service', golf: 'Golf Booking', bus: 'Bus Service' };
+                return map[s];
+            }).join(' + ');
+            document.getElementById('breadcrumb').textContent = `Selected Services: ${services}`;
+
+            // 在bookingContent中添加新服务的表单
+            const content = document.getElementById('bookingContent');
+            
+            if (service === 'car') {
+                content.insertAdjacentHTML('beforeend', generateCarForm());
+                setTimeout(() => addCar(), 100);
+            } else if (service === 'golf') {
+                content.insertAdjacentHTML('beforeend', generateGolfForm());
+                if (!state.selectedServices.has('room')) {
+                    setTimeout(() => addGolfGuest(), 100);
+                }
+            } else if (service === 'bus') {
+                content.insertAdjacentHTML('beforeend', generateBusForm());
+                if (state.selectedServices.has('room')) {
+                    setTimeout(() => syncGuestInfoToOtherServices(), 150);
+                }
+            }
+
+            // 刷新Room表单以更新快捷按钮
+            refreshQuickServiceButtons();
+
+            // 滚动到新添加的表单
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.card');
+                const lastCard = cards[cards.length - 1];
+                if (lastCard) {
+                    lastCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 200);
+        }
+
+        // 刷新快捷服务按钮（不重新生成整个表单）
+        function refreshQuickServiceButtons() {
+            const roomCard = document.querySelector('#bookingContent .card');
+            if (!roomCard) return;
+
+            const quickServiceDiv = roomCard.querySelector('[style*="Need other services"]')?.parentElement;
+            if (!quickServiceDiv) return;
+
+            const buttonsContainer = quickServiceDiv.querySelector('[style*="display: flex"]');
+            if (!buttonsContainer) return;
+
+            // 重新生成按钮
+            buttonsContainer.innerHTML = '';
+            if (!state.selectedServices.has('car')) {
+                buttonsContainer.innerHTML += '<button class="quick-service-btn" onclick="addQuickService(\'car\')">+ Car Service</button>';
+            }
+            if (!state.selectedServices.has('golf')) {
+                buttonsContainer.innerHTML += '<button class="quick-service-btn" onclick="addQuickService(\'golf\')">+ Golf Booking</button>';
+            }
+            if (!state.selectedServices.has('bus')) {
+                buttonsContainer.innerHTML += '<button class="quick-service-btn" onclick="addQuickService(\'bus\')">+ Bus Service</button>';
+            }
+
+            // 如果所有服务都已添加，显示提示
+            if (state.selectedServices.size === 4) {
+                quickServiceDiv.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-secondary); padding: 0.5rem 0;">✅ All services added</div>';
+            }
+        }
+
         function removeCar(id) {
             document.getElementById(`car-${id}`)?.remove();
         }
@@ -1663,6 +1777,7 @@
 
             let guestLines = [];
             let roomLines = [];
+            let promotions = []; // 收集所有不同的积分
             
             // 获取第一位客人的实际信息
             let firstGuestPID = document.getElementById('guestPID-1')?.value?.trim() || '';
@@ -1689,6 +1804,13 @@
                     }
                     guestLines.push(guestLine);
                     roomLines.push(`${name} - ${roomType}`);
+                    
+                    // 收集积分（按顺序，不去重）
+                    const roomSelect = document.getElementById(`roomType-${i}`);
+                    const promo = roomSelect?.options[roomSelect.selectedIndex]?.dataset?.promotion;
+                    if (promo && !promotions.includes(promo)) {
+                        promotions.push(promo);
+                    }
                 }
             }
 
@@ -1696,7 +1818,8 @@
             const displayName = firstGuestName || 'Guest';
             const subject = `[${agent}] ${displayPID} ${displayName} ${hotel} Hotel Room Booking on ${checkIn}`;
             const firstRoomTypeSelect = document.getElementById('roomType-1');
-            const promotion = firstRoomTypeSelect?.options[firstRoomTypeSelect.selectedIndex]?.dataset?.promotion || '';
+            // 格式化积分显示：如果只有一个积分就单独显示，多个就用斜杠分隔
+            const promotionDisplay = promotions.length > 0 ? promotions.join('/') : '';
 
             let email = `Subject: ${subject}
 
@@ -1712,7 +1835,7 @@ ${roomLines.join('\n')}
 Check in: ${checkIn}
 Check out: ${checkOut}
 Rate code: ${rateCode}
-Promotion: ${promotion}
+Promotion: ${promotionDisplay}
 Deposit: ${deposit}
 Trip authorizer: ${authorizer}`;
 
