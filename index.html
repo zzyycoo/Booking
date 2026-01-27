@@ -844,7 +844,7 @@
     <div class="container">
         <div class="header">
             <h1>The Grand Ho Tram</h1>
-            <p class="subtitle">Booking Management System</p>
+            <p class="subtitle">Email Booking Generator</p>
         </div>
 
         <!-- Home Page -->
@@ -930,7 +930,8 @@
 
         function formatDate(dateStr) {
             if (!dateStr) return '';
-            const date = new Date(dateStr);
+            // iOS Safari 兼容：添加时间部分避免时区问题
+            const date = new Date(dateStr + 'T00:00:00');
             const day = date.getDate();
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             return `${day.toString().padStart(2, '0')}-${months[date.getMonth()]}-${date.getFullYear()}`;
@@ -938,7 +939,8 @@
 
         function formatDateShort(dateStr) {
             if (!dateStr) return '';
-            const date = new Date(dateStr);
+            // iOS Safari 兼容：添加时间部分避免时区问题
+            const date = new Date(dateStr + 'T00:00:00');
             const day = date.getDate();
             const ordinal = day + (day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th');
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -1328,13 +1330,17 @@
             const checkOut = document.getElementById('checkOut')?.value;
             
             if (checkIn && checkOut) {
-                const checkInDate = new Date(checkIn);
-                const checkOutDate = new Date(checkOut);
+                // iOS Safari 兼容：使用本地日期字符串避免时区问题
+                const checkInDate = new Date(checkIn + 'T00:00:00');
+                const checkOutDate = new Date(checkOut + 'T00:00:00');
                 
                 if (checkOutDate <= checkInDate) {
                     alert('Check Out Date must be later than Check In Date!');
                     document.getElementById('checkOut').value = '';
-                    document.getElementById('checkOut').focus();
+                    // iOS不支持focus()在某些情况下，用setTimeout包裹
+                    setTimeout(() => {
+                        document.getElementById('checkOut')?.focus();
+                    }, 100);
                     return false;
                 }
             }
