@@ -1061,11 +1061,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label>Check In Date</label>
-                            <input type="date" id="checkIn" onchange="validateCheckOutDate()">
+                            <input type="date" id="checkIn">
                         </div>
                         <div class="form-group">
                             <label>Check Out Date</label>
-                            <input type="date" id="checkOut" onchange="validateCheckOutDate()">
+                            <input type="date" id="checkOut" onblur="validateCheckOutDate()">
                         </div>
                     </div>
                     <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border-left: 3px solid var(--secondary); font-size: 0.85rem; line-height: 1.6;">
@@ -1326,24 +1326,31 @@
         }
 
         function validateCheckOutDate() {
-            const checkIn = document.getElementById('checkIn')?.value;
-            const checkOut = document.getElementById('checkOut')?.value;
+            const checkInInput = document.getElementById('checkIn');
+            const checkOutInput = document.getElementById('checkOut');
             
-            if (checkIn && checkOut) {
-                // iOS Safari 兼容：使用本地日期字符串避免时区问题
-                const checkInDate = new Date(checkIn + 'T00:00:00');
-                const checkOutDate = new Date(checkOut + 'T00:00:00');
-                
-                if (checkOutDate <= checkInDate) {
-                    alert('Check Out Date must be later than Check In Date!');
-                    document.getElementById('checkOut').value = '';
-                    // iOS不支持focus()在某些情况下，用setTimeout包裹
-                    setTimeout(() => {
-                        document.getElementById('checkOut')?.focus();
-                    }, 100);
-                    return false;
-                }
+            const checkIn = checkInInput?.value;
+            const checkOut = checkOutInput?.value;
+            
+            // 如果任一日期未选择，不验证
+            if (!checkIn || !checkOut) {
+                return true;
             }
+            
+            // iOS Safari 兼容：使用本地日期字符串避免时区问题
+            const checkInDate = new Date(checkIn + 'T00:00:00');
+            const checkOutDate = new Date(checkOut + 'T00:00:00');
+            
+            if (checkOutDate <= checkInDate) {
+                // 延迟执行，确保日期选择器已关闭
+                setTimeout(() => {
+                    alert('Check Out Date must be later than Check In Date!');
+                    checkOutInput.value = '';
+                    checkOutInput.focus();
+                }, 100);
+                return false;
+            }
+            
             return true;
         }
 
