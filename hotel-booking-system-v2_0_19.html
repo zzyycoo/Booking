@@ -1,0 +1,3064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Book Email Generator V2.0.19</title>
+    <!-- 
+        Hotel Book Email Generator
+        Version: 2.0.19
+        Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
+        Last Updated: 2026-02-24
+        
+        Changelog V2.0.19:
+        - Save success message stays permanently until user returns to home page
+        - Save success message now in English: "Successfully saved X guest(s)"
+        - Golf Number of Pax auto-calculates based on filled guest names
+        - All guest name fields auto-convert to UPPERCASE (guest, sharer, golf, car, bus, patron)
+
+        Changelog V2.0.18:
+        - Fixed save success message not disappearing (timer now clears properly)
+        - Success message now shows: 成功保存 X 位客户
+        - goHome now fully resets: clears service selections, car forms, success message, generatedEmail
+        - Check In defaults to today, Check Out defaults to tomorrow
+        - ONE DAY TRIP Visit Date defaults to today
+        - Golf Sync now also includes Sharers
+
+        Changelog V2.0.17:
+        - One Day Trip: casinoaudit added to existing recipients (not replace)
+        - One Day Trip body: single "Please note..." intro line, guests listed below each on new line
+
+        Changelog V2.0.16:
+        - ONE DAY TRIP: One Day Trip subject now includes PID: [Agent] PID Name One Day Trip Date
+        - ONE DAY TRIP: One Day Trip body: "Please note that the guest one day trip : PID Name" per guest
+        - ONE DAY TRIP: Send Email for One Day Trip routes to casinoaudit@thegrandhotram.com
+
+        Changelog V2.0.15:
+        - ONE DAY TRIP patron list now includes Old PID / New PID fields
+        - PID auto-fill via database search (same as normal room booking)
+        - Save to Sheets also includes Old/New PID for ONE DAY TRIP patrons
+
+        Changelog V2.0.14:
+        - ONE DAY TRIP: added subject type selector
+          • Patron Registration → [Agent] Patron Registration - Name Date
+          • One Day Trip → [Agent] Name One Day Trip Date
+
+        Changelog V2.0.13:
+        - ONE DAY TRIP now supports Save to Sheets (saves agent, patron names, visit date, current time)
+        - Removed "must select Room Booking" restriction for ONE DAY TRIP save
+
+        Changelog V2.0.12:
+        - Renamed A171 entry to "ONE DAY TRIP — Patron Registration"
+        - Added agent selector inside ONE DAY TRIP form (A171 Pham Duc Huy / Le Cong Ly Thanh + free input)
+        - Subject dynamically uses selected agent name: [Agent] Patron Registration - Name Date
+        - Added Le Cong Ly Thanh to normal booking Agent dropdown as well
+
+        Changelog V2.0.11:
+        - Added A171 PHAM DUC HUY agent with Patron Registration mode
+        - A171 can choose with or without room booking
+        - Without room: name-only guest list, generates Patron Registration email
+        - With room: normal room booking flow
+
+        Changelog V2.0.8:
+        - Added check-in / check-out date validation before generating email
+        - Shows alert if either date is missing when Room Booking is selected
+
+        Changelog V2.0.7:
+        - Smart PID display logic: Old PID only → use Old PID; New PID present → use New PID; neither → use "New"
+        - Applied to email subject, body guest lines, and golf guest lines
+        
+        Changelog V2.0.6:
+        - Added Old PID and New PID dual search functionality
+        - Fixed time format in Google Sheets (now shows time only: HH:MM:SS)
+        - Fixed Agent/Authorizer dropdown behavior (can select even with existing values)
+        - Email uses New PID, Google Sheets saves both Old and New PID
+        - Support for bidirectional PID lookup (Old→New or New→Old)
+        
+        V2.0.5: Updated time format and sharer handling
+        V2.0.4: Added Google Sheets integration
+        V2.0.3: Updated Agent/Authorizer fields
+        V2.0.2: Increased input/select height for iOS
+        V2.0.1: Fixed iOS Safari date picker
+        V2.0: Excel PID database import
+    -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a4d2e;
+            --primary-light: #2d6a4f;
+            --secondary: #d4af37;
+            --accent: #8b7355;
+            --bg-gradient-start: #f8f9fa;
+            --bg-gradient-end: #e9ecef;
+            --card: #ffffff;
+            --text: #212529;
+            --text-secondary: #6c757d;
+            --border: #dee2e6;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1rem 0.75rem;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            z-index: -1;
+            opacity: 0.05;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1.25rem 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            color: white;
+            margin-bottom: 0.375rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.875rem;
+            margin-top: 1rem;
+        }
+
+        .selection-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            padding: 1.25rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .selection-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .selection-card:hover {
+            border-color: var(--secondary);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .selection-card.selected {
+            border-color: var(--secondary);
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .selection-card.selected::before {
+            opacity: 0.05;
+        }
+
+        .selection-card h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .selection-card p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+            z-index: 2;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+            animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .selection-card.selected .checkmark {
+            display: flex;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .guest-group, .item-group {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid var(--secondary);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .guest-group:hover, .item-group:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateX(4px);
+        }
+
+        .guest-header, .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .guest-number, .item-number {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .guest-number::before {
+            content: '👤';
+            font-size: 1rem;
+        }
+
+        .item-number::before {
+            content: '🚗';
+            font-size: 1rem;
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, var(--danger) 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 0.375rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+
+        .remove-btn:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        input, select, textarea {
+            padding: 0.625rem 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+
+        input:disabled, select:disabled {
+            background: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Inter', sans-serif;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--success) 0%, #218838 100%);
+            color: white;
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-add {
+            background: transparent;
+            color: var(--primary);
+            border: 2px dashed var(--secondary);
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-add:hover {
+            background: rgba(212, 175, 55, 0.05);
+            border-style: solid;
+            transform: translateY(-2px);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .email-preview {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 1.5rem;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            border: 2px solid var(--border);
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+            word-break: break-word;
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            border-left: 4px solid var(--success);
+            text-align: center;
+            display: none;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .breadcrumb {
+            text-align: center;
+            margin-bottom: 1.25rem;
+            padding: 0.75rem 1rem;
+            background: white;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-sm);
+            font-weight: 500;
+            border: 1px solid var(--border);
+        }
+
+        .tip-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            border-left: 3px solid var(--warning);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tip-box::before {
+            content: '💡';
+            font-size: 1rem;
+        }
+
+        /* Bus Route Buttons */
+        .route-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.625rem;
+            margin: 1rem 0;
+        }
+
+        .route-btn {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        .route-btn:hover {
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .route-btn.active {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            border-color: var(--secondary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .bus-route-form {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 8px;
+            border-left: 3px solid var(--secondary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .bus-route-form h4 {
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        /* Date picker styling */
+        input[type="date"] {
+            position: relative;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 0.75rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        input[type="date"]:hover::-webkit-calendar-picker-indicator {
+            opacity: 1;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+            padding: 0;
+        }
+
+        input[type="date"]::-webkit-datetime-edit-text {
+            padding: 0 0.25rem;
+        }
+
+        /* Sharer button styling */
+        .btn-sharer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-sharer:hover {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            border-color: var(--secondary);
+            border-style: solid;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-sharer.active {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            border-color: var(--secondary);
+            border-style: solid;
+            color: var(--primary);
+        }
+
+        .sharer-icon {
+            font-size: 1rem;
+        }
+
+        .btn-sharer-remove {
+            padding: 0.375rem 0.875rem;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-sharer-remove:hover {
+            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Quick location select buttons */
+        .quick-btn {
+            padding: 0.375rem 0.75rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            border-color: var(--secondary);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-btn:active {
+            transform: translateY(0);
+        }
+
+        .location-input {
+            width: 100%;
+        }
+
+        .quick-select-buttons {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* V2.0: PID Input Styles */
+        .pid-input-wrapper {
+            position: relative;
+        }
+
+        .pid-input {
+            width: 100%;
+            padding-right: 2.5rem;
+        }
+
+        .pid-status-icon {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .pid-found {
+            border-color: #10b981 !important;
+            background-color: #f0fdf4 !important;
+        }
+
+        .pid-not-found {
+            border-color: #f59e0b !important;
+            background-color: #fffbeb !important;
+        }
+
+        .pid-searching {
+            border-color: #3b82f6 !important;
+        }
+
+        .pid-info-box {
+            margin-top: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .pid-info-box.success {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left: 3px solid #10b981;
+            color: #065f46;
+            display: block;
+        }
+
+        .pid-info-box.warning {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-left: 3px solid #f59e0b;
+            color: #92400e;
+            display: block;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .searching-animation {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        /* Quick service add buttons */
+        .quick-service-btn {
+            padding: 0.375rem 0.875rem;
+            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quick-service-btn:hover {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            border-color: var(--primary);
+            border-style: solid;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-service-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Progress bar animation */
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .importing-status {
+            animation: progressPulse 1.5s ease-in-out infinite;
+        }
+
+        /* Guest fields responsive grid */
+        .guest-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .sharer-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .subtitle {
+                font-size: 0.7rem;
+            }
+
+            /* iOS专用：增加输入框和选择框高度，提升可点击性 */
+            input, select, textarea {
+                padding: 0.875rem 1rem;
+                font-size: 1rem;
+                min-height: 44px; /* iOS推荐的最小触摸目标 */
+            }
+
+            .selection-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.625rem;
+            }
+
+            .selection-card {
+                padding: 1rem 0.75rem;
+            }
+
+            .selection-card h3 {
+                font-size: 1rem;
+            }
+
+            .selection-card p {
+                font-size: 0.75rem;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .actions .btn {
+                width: 100%;
+                padding: 0.625rem 1.25rem;
+                font-size: 0.85rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0.625rem;
+            }
+
+            .route-buttons {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .guest-group, .item-group {
+                padding: 0.875rem;
+            }
+
+            .section-title {
+                font-size: 1.1rem;
+            }
+
+            .header {
+                padding: 1rem 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .btn-sharer {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .guest-fields,
+            .sharer-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        /* Loading state */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <!-- SheetJS library for Excel file reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>A KANG'S TOOL</h1>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.19</span></p>
+        </div>
+
+        <!-- V2.0: PID Database Import -->
+        <div id="pidImportCard" class="card" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.5rem;">📊</span> PID Database
+                    </h3>
+                    <p id="pidStatus" style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+                        No database loaded. Import Excel file to enable auto-fill.
+                    </p>
+                </div>
+                <div>
+                    <input type="file" id="pidFileInput" accept=".xlsx,.xls" style="display: none;" onchange="handlePIDFileUpload(event)">
+                    <button onclick="document.getElementById('pidFileInput').click()" class="btn" style="background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%); padding: 0.625rem 1.25rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="font-size: 1.2rem;">📤</span>
+                        <span id="importButtonText">Import Excel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <div class="card">
+                <div class="section-title">Please Select Services to Book</div>
+
+                <!-- V2.0.12: ONE DAY TRIP Entry -->
+                <div id="a171Card" style="background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%); border: 2px solid var(--secondary); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; cursor: pointer; transition: all 0.3s ease;" onclick="proceedA171()">
+                    <div>
+                        <div style="font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 0.2rem;">🌅 ONE DAY TRIP — Patron Registration</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Patron visit without room booking</div>
+                    </div>
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;" onclick="event.stopPropagation(); proceedA171()">Enter →</button>
+                </div>
+
+                <div style="text-align:center; font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.75rem; letter-spacing:0.5px;">— OR SELECT OTHER SERVICES —</div>
+
+                <div class="selection-grid">
+                    <div class="selection-card" onclick="toggleSelection('room')">
+                        <div class="checkmark">✓</div>
+                        <h3>Room Booking</h3>
+                        
+                    </div>
+                    <div class="selection-card" onclick="toggleSelection('car')">
+                        <div class="checkmark">✓</div>
+                        <h3>Car Service</h3>
+                        
+                    </div>
+                    <div class="selection-card" onclick="toggleSelection('golf')">
+                        <div class="checkmark">✓</div>
+                        <h3>Golf Booking</h3>
+                        
+                    </div>
+                    <div class="selection-card" onclick="toggleSelection('bus')">
+                        <div class="checkmark">✓</div>
+                        <h3>Bus Service</h3>
+                        
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="proceedToBooking()">Continue Booking →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Page -->
+        <div id="bookingPage" class="page">
+            <div class="breadcrumb" id="breadcrumb"></div>
+            <div id="bookingContent"></div>
+            <div class="actions">
+                <button class="btn btn-back" onclick="goHome()">← Back to Home</button>
+                <button class="btn btn-primary" onclick="generateAllEmails()">✉️ Generate Email</button>
+                <button class="btn btn-secondary" onclick="copyAllEmails()">📋 Copy</button>
+                <button class="btn btn-send" onclick="sendEmail()">📨 Send Email</button>
+                <button class="btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="saveToGoogleSheets()">📊 Save to Sheets</button>
+            </div>
+            <div class="success-message" id="successMessage"></div>
+            <div class="card" id="previewCard" style="display: none; margin-top: 1.5rem;">
+                <div class="section-title">👀 Email Preview</div>
+                <div class="email-preview" id="emailPreview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            selectedServices: new Set(),
+            guestCount: 0,
+            carCount: 0,
+            golfGuests: [],
+            busRoutes: {
+                hcmToHt: false,
+                htToHcm: false
+            },
+            // V2.0: PID Database - 支持新旧PID双向查询
+            pidDatabase: new Map(), // Map<PID, {oldPID, newPID, name}>
+            oldPIDIndex: new Map(), // Map<OldPID, PID> for quick lookup
+            newPIDIndex: new Map(), // Map<NewPID, PID> for quick lookup
+            pidDatabaseLoaded: false,
+            // V2.0.9: A171 Patron mode
+            isA171Mode: false,
+            a171WithRoom: false,
+            a171GuestCount: 0,
+            a171SubjectType: 'patron'
+        };
+
+        const roomTypes = {
+            HIR: [
+                { types: ['TSTS', 'TSTN', 'KPUS', 'TPUN', 'TPU'], promotion: 218 },
+                { types: ['TVUN', 'TVUS', 'KLON', 'KLOS'], promotion: 268 },
+                { types: ['KOTS', 'TOTS'], promotion: 388 },
+                { types: ['XOTN', 'XOTS', 'XFTN', 'XFTS', 'XLOS', 'XCIS'], promotion: 888 },
+                { types: ['X2ON', 'X2OS', 'XDBS'], promotion: 1888 },
+                { types: ['XVUN', 'XVUS'], promotion: 2188 },
+                { types: ['X2AN', 'X2AS'], promotion: 3188 }
+            ],
+            IC: [
+                { types: ['KDXN', 'KDXS', 'TDXN', 'TDXS', 'KLON', 'KLOS', 'TLON', 'TLOS'], promotion: 288 },
+                { types: ['KOTS', 'KOTN', 'TOTS', 'TOTN'], promotion: 288 },
+                { types: ['KVUS', 'KVUN', 'TVUS', 'TVUN'], promotion: 388 },
+                { types: ['XEXS', 'XEXN', 'XOTS', 'XOTN', 'XVUS', 'XVUN'], promotion: 3188 },
+                { types: ['XFTS', 'XFTN', 'XLOS', 'XLON'], promotion: 3888 }
+            ]
+        };
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            // iOS Safari 兼容：添加时间部分避免时区问题
+            const date = new Date(dateStr + 'T00:00:00');
+            const day = date.getDate();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${day.toString().padStart(2, '0')}-${months[date.getMonth()]}-${date.getFullYear()}`;
+        }
+
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            // iOS Safari 兼容：添加时间部分避免时区问题
+            const date = new Date(dateStr + 'T00:00:00');
+            const day = date.getDate();
+            const ordinal = day + (day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${ordinal}-${months[date.getMonth()]}`;
+        }
+
+        // V2.0.7: 智能PID显示逻辑
+        // 有新ID → 用新ID；只有旧ID → 用旧ID；两者都没有 → 用"New"
+        function resolvePID(oldPID, newPID) {
+            const old = (oldPID || '').trim();
+            const nw = (newPID || '').trim();
+            // 过滤掉默认占位符 "New"（不区分大小写）
+            const newIsReal = nw && nw.toLowerCase() !== 'new';
+            const oldIsReal = old && old.toLowerCase() !== 'new';
+            if (newIsReal) return nw;
+            if (oldIsReal) return old;
+            return 'New';
+        }
+
+        // V2.0.18: 默认日期辅助
+        function getTodayStr() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+        function getTomorrowStr() {
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        function toggleSelection(service) {
+            const clickedCard = event.currentTarget;
+            
+            if (state.selectedServices.has(service)) {
+                state.selectedServices.delete(service);
+                clickedCard.classList.remove('selected');
+            } else {
+                state.selectedServices.add(service);
+                clickedCard.classList.add('selected');
+            }
+        }
+
+        function proceedToBooking() {
+            if (state.selectedServices.size === 0) {
+                alert('Please select at least one service!');
+                return;
+            }
+
+            const services = Array.from(state.selectedServices).map(s => {
+                const map = {room: 'Room Booking', car: 'Car Service', golf: 'Golf Booking', bus: 'Bus Service'};
+                return map[s];
+            }).join(' + ');
+            document.getElementById('breadcrumb').textContent = `Selected Services: ${services}`;
+
+            generateBookingForms();
+            document.getElementById('homePage').classList.remove('active');
+            document.getElementById('bookingPage').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        // V2.0.9: A171 Patron Registration flow
+        function proceedA171() {
+            state.isA171Mode = true;
+            state.selectedServices.clear();
+            document.getElementById('breadcrumb').textContent = 'A171 PHAM DUC HUY — Patron Registration';
+            generateA171Form();
+            document.getElementById('homePage').classList.remove('active');
+            document.getElementById('bookingPage').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function generateA171Form() {
+            const content = document.getElementById('bookingContent');
+            content.innerHTML = '';
+            state.a171GuestCount = 0;
+
+            content.innerHTML = `
+                <div class="card">
+                    <div class="section-title">🌅 ONE DAY TRIP — Patron Registration</div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Agent</label>
+                            <input list="a171AgentList" id="a171Agent" placeholder="Select or type agent name" onclick="this.select()">
+                            <datalist id="a171AgentList">
+                                <option value="A171 Pham Duc Huy">
+                                <option value="Le Cong Ly Thanh">
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>Visit Date</label>
+                            <input type="date" id="a171Date" value="${getTodayStr()}">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-weight:600; color:var(--primary); font-size:0.9rem; display:block; margin-bottom:0.5rem;">Email Subject Type</label>
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                            <button id="a171SubjBtn1" class="route-btn active" onclick="setA171SubjectType('patron')" style="flex:1; min-width:160px;">📋 Patron Registration</button>
+                            <button id="a171SubjBtn2" class="route-btn" onclick="setA171SubjectType('oneday')" style="flex:1; min-width:160px;">🌅 [Name] One Day Trip + Date</button>
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="margin-top:0.5rem;">👥 Patron List</div>
+                    <div id="a171GuestsContainer"></div>
+                    <button class="btn btn-add" onclick="addA171Guest()">+ Add Patron</button>
+                </div>
+            `;
+
+            state.a171SubjectType = 'patron';
+            setTimeout(() => addA171Guest(), 100);
+        }
+
+        function setA171SubjectType(type) {
+            state.a171SubjectType = type;
+            document.getElementById('a171SubjBtn1').classList.toggle('active', type === 'patron');
+            document.getElementById('a171SubjBtn2').classList.toggle('active', type === 'oneday');
+        }
+
+        function addA171Guest() {
+            state.a171GuestCount++;
+            const n = state.a171GuestCount;
+            const container = document.getElementById('a171GuestsContainer');
+
+            const div = document.createElement('div');
+            div.className = 'guest-group';
+            div.id = `a171Guest-${n}`;
+            div.innerHTML = `
+                <div class="guest-header">
+                    <span class="guest-number">Patron #${n}</span>
+                    <button class="remove-btn" onclick="removeA171Guest(${n})">Remove</button>
+                </div>
+                <div class="guest-fields">
+                    <div class="form-group">
+                        <label>Old PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text"
+                                   id="a171OldPID-${n}"
+                                   class="pid-input"
+                                   placeholder="Enter Old PID"
+                                   oninput="searchPID('a171OldPID-${n}', 'a171NewPID-${n}', 'a171GuestName-${n}', 'a171PidInfo-${n}')">
+                            <span class="pid-status-icon" id="a171OldPidIcon-${n}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>New PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text"
+                                   id="a171NewPID-${n}"
+                                   class="pid-input"
+                                   value="New"
+                                   placeholder="Enter New PID"
+                                   oninput="searchPID('a171OldPID-${n}', 'a171NewPID-${n}', 'a171GuestName-${n}', 'a171PidInfo-${n}')">
+                            <span class="pid-status-icon" id="a171NewPidIcon-${n}"></span>
+                        </div>
+                        <div id="a171PidInfo-${n}" class="pid-info-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="a171GuestName-${n}" placeholder="Auto-filled from PID">
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeA171Guest(id) {
+            document.getElementById(`a171Guest-${id}`)?.remove();
+        }
+
+        function goHome() {
+            // 重置所有状态
+            state.selectedServices.clear();
+            state.guestCount = 0;
+            state.carCount = 0;
+            state.golfGuests = [];
+            state.busRoutes = { hcmToHt: false, htToHcm: false };
+            state.isA171Mode = false;
+            state.a171WithRoom = false;
+            state.a171GuestCount = 0;
+            state.a171SubjectType = 'patron';
+            window.generatedEmail = null;
+            window.isOneDayTrip = false;
+
+            // 清空表单内容
+            document.getElementById('bookingContent').innerHTML = '';
+            document.getElementById('emailPreview').innerHTML = '';
+
+            // 清除成功消息
+            const msg = document.getElementById('successMessage');
+            msg.style.display = 'none';
+            msg.textContent = '';
+            if (_msgTimer) { clearTimeout(_msgTimer); _msgTimer = null; }
+
+            // 重置首页所有服务卡片的选中状态
+            document.querySelectorAll('.selection-card').forEach(card => card.classList.remove('selected'));
+
+            // 切换页面显示
+            document.getElementById('bookingPage').classList.remove('active');
+            document.getElementById('homePage').classList.add('active');
+            document.getElementById('previewCard').style.display = 'none';
+
+            window.scrollTo(0, 0);
+        }
+
+        function generateBookingForms() {
+            const content = document.getElementById('bookingContent');
+            content.innerHTML = '';
+            
+            // 重置所有计数器
+            state.guestCount = 0;
+            state.carCount = 0;
+            state.golfGuests = [];
+
+            if (state.selectedServices.has('room')) {
+                content.innerHTML += generateRoomForm();
+                setTimeout(() => addGuest(), 100);
+            }
+
+            if (state.selectedServices.has('car')) {
+                content.innerHTML += generateCarForm();
+                setTimeout(() => addCar(), 100);
+            }
+
+            if (state.selectedServices.has('golf')) {
+                content.innerHTML += generateGolfForm();
+                if (!state.selectedServices.has('room')) {
+                    setTimeout(() => addGolfGuest(), 100);
+                }
+            }
+
+            if (state.selectedServices.has('bus')) {
+                content.innerHTML += generateBusForm();
+            }
+
+            if (state.selectedServices.has('room')) {
+                setTimeout(() => syncGuestInfoToOtherServices(), 200);
+            }
+        }
+
+        function generateRoomForm() {
+            return `
+                <div class="card">
+                    <div class="section-title">🛏️ Room Booking Information</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Agent</label>
+                            <input list="agentList" id="agentName" placeholder="Select or type agent name" onclick="this.select()">
+                            <datalist id="agentList">
+                                <option value="IM">
+                                <option value="A03 Tun Naing">
+                                <option value="A171 Pham Duc Huy">
+                                <option value="Le Cong Ly Thanh">
+                                <option value="Wang Kan">
+                                <option value="Chen Cheng Chia">
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>Hotel</label>
+                            <select id="hotelName" onchange="updateRoomTypes()">
+                                <option value="">Please Select</option>
+                                <option value="HIR">HIR</option>
+                                <option value="IC">IC</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Check In Date</label>
+                            <input type="date" id="checkIn" value="${getTodayStr()}">
+                        </div>
+                        <div class="form-group">
+                            <label>Check Out Date</label>
+                            <input type="date" id="checkOut" value="${getTomorrowStr()}" onblur="validateCheckOutDate()">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Authorizer</label>
+                            <input list="authorizerList" id="authorizer" value="Jian.Xu" placeholder="Select or type name" onclick="this.select()">
+                            <datalist id="authorizerList">
+                                <option value="Kevin Loh">
+                                <option value="IMHUYT">
+                                <option value="Nan.Hao">
+                                <option value="Kingz Chock">
+                                <option value="Jian.Xu">
+                            </datalist>
+                        </div>
+                    </div>
+                    <!-- Hidden fields for default values -->
+                    <input type="hidden" id="rateCode" value="CASBAR">
+                    <input type="hidden" id="deposit" value="No">
+                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border-left: 3px solid var(--secondary); font-size: 0.85rem; line-height: 1.6;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <div><strong>Promotion:</strong> <span id="displayPromotion">-</span></div>
+                        </div>
+                    </div>
+                    <div class="section-title" style="margin-top: 1rem;">👥 Guest Information</div>
+                    <div id="guestsContainer"></div>
+                    <button class="btn btn-add" onclick="addGuest()">+ Add Guest</button>
+                    
+                    <!-- Quick Add Services -->
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Need other services?</div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            ${!state.selectedServices.has('car') ? '<button class="quick-service-btn" onclick="addQuickService(\'car\')">+ Car Service</button>' : ''}
+                            ${!state.selectedServices.has('golf') ? '<button class="quick-service-btn" onclick="addQuickService(\'golf\')">+ Golf Booking</button>' : ''}
+                            ${!state.selectedServices.has('bus') ? '<button class="quick-service-btn" onclick="addQuickService(\'bus\')">+ Bus Service</button>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateCarForm() {
+            const tipHtml = state.selectedServices.has('room') 
+                ? '<div class="tip-box">Guest name will be auto-filled from room booking</div>' 
+                : '';
+            
+            return `
+                <div class="card">
+                    <div class="section-title">🚗 Car Service Information</div>
+                    ${tipHtml}
+                    <div id="carsContainer"></div>
+                    <button class="btn btn-add" onclick="addCar()">+ Add Car</button>
+                </div>
+            `;
+        }
+
+        function generateGolfForm() {
+            const tipHtml = state.selectedServices.has('room')
+                ? '<div class="tip-box">Guest list will be auto-filled from room booking</div>'
+                : '';
+            
+            const syncButtonHtml = state.selectedServices.has('room')
+                ? '<button class="btn btn-secondary" onclick="autoFillGolfGuests()" style="width: 100%; margin-bottom: 0.625rem;">📋 Sync Room Guests</button>'
+                : '';
+
+            return `
+                <div class="card">
+                    <div class="section-title">⛳ Golf Booking Information</div>
+                    ${tipHtml}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" id="golfDateTime">
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Pax</label>
+                            <input type="number" id="golfPax" value="4">
+                        </div>
+                        <div class="form-group">
+                            <label>Authorizer</label>
+                            <input type="text" id="golfAuthorizer" value="Jian.Xu">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Payment</label>
+                            <select id="golfPayment">
+                                <option value="pro +600/1000 – post to room">pro +600/1000 – post to room</option>
+                                <option value="Primary Comp">Primary Comp</option>
+                                <option value="GOA">GOA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Note</label>
+                            <input type="text" id="golfNote" value="Casino Rate (If guests show CSN membership)">
+                        </div>
+                    </div>
+                    <div class="section-title" style="margin-top: 1rem;">👥 Guest List</div>
+                    <div id="golfGuestsContainer"></div>
+                    ${syncButtonHtml}
+                    <button class="btn btn-add" onclick="addGolfGuest()">+ Add Guest</button>
+                </div>
+            `;
+        }
+
+        function generateBusForm() {
+            const tipHtml = state.selectedServices.has('room')
+                ? '<div class="tip-box">Passenger name will be auto-filled from room booking</div>'
+                : '';
+            
+            const readonlyAttr = state.selectedServices.has('room') ? 'readonly' : '';
+            const disabledStyle = state.selectedServices.has('room') ? 'background: #f8f9fa;' : '';
+
+            return `
+                <div class="card">
+                    <div class="section-title">🚌 Bus Service Information</div>
+                    ${tipHtml}
+                    
+                    <div class="form-group">
+                        <label>Passenger Name</label>
+                        <input type="text" id="busPassenger" ${readonlyAttr} style="${disabledStyle}">
+                    </div>
+
+                    <div style="margin: 1rem 0;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary); font-size: 0.85rem;">Select Route(s)</label>
+                        <div class="route-buttons">
+                            <button class="route-btn" id="btnHcmToHt" onclick="toggleBusRoute('hcmToHt')">
+                                HCM → HT
+                            </button>
+                            <button class="route-btn" id="btnHtToHcm" onclick="toggleBusRoute('htToHcm')">
+                                HT → HCM
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="busFormHcmToHt" class="bus-route-form">
+                        <h4>📍 HCM → HT Details</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Departure Time</label>
+                                <input type="text" id="timeHcmToHt" placeholder="e.g. 12:00 pm">
+                            </div>
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" id="dateHcmToHt">
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Seats</label>
+                                <input type="number" id="seatsHcmToHt" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="busFormHtToHcm" class="bus-route-form">
+                        <h4>📍 HT → HCM Details</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Departure Time</label>
+                                <input type="text" id="timeHtToHcm" placeholder="e.g. 14:00 pm">
+                            </div>
+                            <div class="form-group">
+                                <label>Date</label>
+                                <input type="date" id="dateHtToHcm">
+                            </div>
+                            <div class="form-group">
+                                <label>Number of Seats</label>
+                                <input type="number" id="seatsHtToHcm" value="5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 0.75rem;">
+                        <label>Authorizer</label>
+                        <input type="text" id="busAuthorizer" value="Jian.Xu">
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateRoomTypes() {
+            const hotel = document.getElementById('hotelName')?.value;
+            if (!hotel) return;
+
+            for (let i = 1; i <= state.guestCount; i++) {
+                const select = document.getElementById(`roomType-${i}`);
+                if (select) updateRoomTypeSelect(select, hotel);
+            }
+        }
+
+        function updateRoomTypeSelect(selectElement, hotel) {
+            selectElement.innerHTML = '<option value="">Please Select Room Type</option>';
+            if (!hotel || !roomTypes[hotel]) return;
+
+            roomTypes[hotel].forEach(group => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = `Points: ${group.promotion}`;
+                group.types.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = `${type} (${group.promotion} pts)`;
+                    option.dataset.promotion = group.promotion;
+                    optgroup.appendChild(option);
+                });
+                selectElement.appendChild(optgroup);
+            });
+        }
+
+        function addGuest() {
+            state.guestCount++;
+            const container = document.getElementById('guestsContainer');
+            const hotel = document.getElementById('hotelName')?.value;
+            
+            const guestDiv = document.createElement('div');
+            guestDiv.className = 'guest-group';
+            guestDiv.id = `guest-${state.guestCount}`;
+            guestDiv.innerHTML = `
+                <div class="guest-header">
+                    <span class="guest-number">Guest #${state.guestCount}</span>
+                    <button class="remove-btn" onclick="removeGuest(${state.guestCount})">Remove</button>
+                </div>
+                <div class="guest-fields">
+                    <div class="form-group">
+                        <label>Old PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" 
+                                   id="guestOldPID-${state.guestCount}" 
+                                   class="pid-input"
+                                   oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}')"
+                                   onchange="syncGuestInfoToOtherServices()"
+                                   placeholder="Enter Old PID">
+                            <span class="pid-status-icon" id="oldPidIcon-${state.guestCount}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>New PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" 
+                                   id="guestNewPID-${state.guestCount}" 
+                                   class="pid-input"
+                                   value="New"
+                                   oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}')"
+                                   onchange="syncGuestInfoToOtherServices()"
+                                   placeholder="Enter New PID">
+                            <span class="pid-status-icon" id="newPidIcon-${state.guestCount}"></span>
+                        </div>
+                        <div id="pidInfo-${state.guestCount}" class="pid-info-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" 
+                               id="guestName-${state.guestCount}" 
+                               onchange="syncGuestInfoToOtherServices()"
+                               placeholder="Auto-filled from PID">
+                    </div>
+                    <div class="form-group">
+                        <label>Room Type</label>
+                        <select id="roomType-${state.guestCount}" onchange="updatePromotionDisplay()">
+                            <option value="">Please select hotel first</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="sharerSection-${state.guestCount}" style="margin-top: 0.5rem;">
+                    <button class="btn-sharer" onclick="toggleSharer(${state.guestCount})" type="button">
+                        <span class="sharer-icon">👥</span> Add Sharer
+                    </button>
+                </div>
+                <div id="sharerForm-${state.guestCount}" style="display: none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e9ecef;">
+                    <div class="sharer-fields">
+                        <div class="form-group">
+                            <label>Sharer Old PID</label>
+                            <div class="pid-input-wrapper">
+                                <input type="text" 
+                                       id="sharerOldPID-${state.guestCount}" 
+                                       class="pid-input"
+                                       placeholder="Enter Old PID"
+                                       oninput="searchPID('sharerOldPID-${state.guestCount}', 'sharerNewPID-${state.guestCount}', 'sharerName-${state.guestCount}', 'sharerPidInfo-${state.guestCount}')">
+                                <span class="pid-status-icon" id="sharerOldPidIcon-${state.guestCount}"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Sharer New PID</label>
+                            <div class="pid-input-wrapper">
+                                <input type="text" 
+                                       id="sharerNewPID-${state.guestCount}" 
+                                       class="pid-input"
+                                       placeholder="Enter New PID"
+                                       oninput="searchPID('sharerOldPID-${state.guestCount}', 'sharerNewPID-${state.guestCount}', 'sharerName-${state.guestCount}', 'sharerPidInfo-${state.guestCount}')">
+                                <span class="pid-status-icon" id="sharerNewPidIcon-${state.guestCount}"></span>
+                            </div>
+                            <div id="sharerPidInfo-${state.guestCount}" class="pid-info-box"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Sharer Name</label>
+                            <input type="text" 
+                                   id="sharerName-${state.guestCount}" 
+                                   placeholder="Auto-filled from PID">
+                        </div>
+                    </div>
+                    <button class="btn-sharer-remove" onclick="removeSharer(${state.guestCount})" type="button">
+                        Remove Sharer
+                    </button>
+                </div>
+            `;
+            container.appendChild(guestDiv);
+
+            if (hotel) {
+                const select = document.getElementById(`roomType-${state.guestCount}`);
+                updateRoomTypeSelect(select, hotel);
+            }
+        }
+
+        function removeGuest(id) {
+            document.getElementById(`guest-${id}`)?.remove();
+            setTimeout(() => syncGuestInfoToOtherServices(), 100);
+        }
+
+        function validateCheckOutDate() {
+            const checkInInput = document.getElementById('checkIn');
+            const checkOutInput = document.getElementById('checkOut');
+            
+            const checkIn = checkInInput?.value;
+            const checkOut = checkOutInput?.value;
+            
+            // 如果任一日期未选择，不验证
+            if (!checkIn || !checkOut) {
+                return true;
+            }
+            
+            // iOS Safari 兼容：使用本地日期字符串避免时区问题
+            const checkInDate = new Date(checkIn + 'T00:00:00');
+            const checkOutDate = new Date(checkOut + 'T00:00:00');
+            
+            if (checkOutDate <= checkInDate) {
+                // 延迟执行，确保日期选择器已关闭
+                setTimeout(() => {
+                    alert('Check Out Date must be later than Check In Date!');
+                    checkOutInput.value = '';
+                    checkOutInput.focus();
+                }, 100);
+                return false;
+            }
+            
+            return true;
+        }
+
+        function updatePromotionDisplay() {
+            const firstRoomTypeSelect = document.getElementById('roomType-1');
+            if (firstRoomTypeSelect && firstRoomTypeSelect.selectedIndex > 0) {
+                const promotion = firstRoomTypeSelect.options[firstRoomTypeSelect.selectedIndex]?.dataset?.promotion || '-';
+                const displayElement = document.getElementById('displayPromotion');
+                if (displayElement) {
+                    displayElement.textContent = promotion;
+                }
+            }
+        }
+
+        function toggleSharer(guestId) {
+            const sharerForm = document.getElementById(`sharerForm-${guestId}`);
+            const sharerSection = document.getElementById(`sharerSection-${guestId}`);
+            
+            if (sharerForm.style.display === 'none') {
+                sharerForm.style.display = 'block';
+                sharerSection.querySelector('.btn-sharer').innerHTML = '<span class="sharer-icon">👥</span> Sharer Added';
+                sharerSection.querySelector('.btn-sharer').classList.add('active');
+            }
+        }
+
+        function removeSharer(guestId) {
+            const sharerForm = document.getElementById(`sharerForm-${guestId}`);
+            const sharerSection = document.getElementById(`sharerSection-${guestId}`);
+            const sharerOldPIDInput = document.getElementById(`sharerOldPID-${guestId}`);
+            const sharerNewPIDInput = document.getElementById(`sharerNewPID-${guestId}`);
+            const sharerNameInput = document.getElementById(`sharerName-${guestId}`);
+            
+            // Clear inputs
+            if (sharerOldPIDInput) sharerOldPIDInput.value = '';
+            if (sharerNewPIDInput) sharerNewPIDInput.value = '';
+            if (sharerNameInput) sharerNameInput.value = '';
+            
+            // Hide form
+            sharerForm.style.display = 'none';
+            
+            // Reset button
+            sharerSection.querySelector('.btn-sharer').innerHTML = '<span class="sharer-icon">👥</span> Add Sharer';
+            sharerSection.querySelector('.btn-sharer').classList.remove('active');
+        }
+
+        function syncGuestInfoToOtherServices() {
+            const firstGuestName = document.getElementById('guestName-1')?.value;
+            
+            if (!firstGuestName) return;
+
+            if (state.selectedServices.has('bus')) {
+                const busPassengerField = document.getElementById('busPassenger');
+                if (busPassengerField) {
+                    busPassengerField.value = firstGuestName;
+                }
+            }
+
+            if (state.selectedServices.has('car')) {
+                const carNameField = document.getElementById('carName-1');
+                if (carNameField && !carNameField.value) {
+                    carNameField.value = firstGuestName;
+                }
+            }
+
+            if (state.selectedServices.has('golf')) {
+                autoFillGolfGuests();
+            }
+        }
+
+        function addCar() {
+            state.carCount++;
+            const container = document.getElementById('carsContainer');
+            
+            // 获取订房的入住日期作为默认日期
+            const checkInDate = document.getElementById('checkIn')?.value || '';
+            
+            // 自动填充客人名字（如果有订房）
+            let autoFilledName = '';
+            if (state.selectedServices.has('room')) {
+                const firstGuestName = document.getElementById('guestName-1')?.value || '';
+                autoFilledName = firstGuestName;
+            }
+            
+            const carDiv = document.createElement('div');
+            carDiv.className = 'item-group';
+            carDiv.id = `car-${state.carCount}`;
+            carDiv.innerHTML = `
+                <div class="item-header">
+                    <span class="item-number">Car #${state.carCount}</span>
+                    <button class="remove-btn" onclick="removeCar(${state.carCount})">Remove</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Car Type</label>
+                        <select id="carType-${state.carCount}">
+                            <option value="limo">Limo</option>
+                            <option value="sedan">Sedan</option>
+                            <option value="SUV">SUV</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" id="carName-${state.carCount}" value="${autoFilledName}">
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Guests</label>
+                        <input type="number" id="carGuests-${state.carCount}" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" id="carPhone-${state.carCount}" value="0343222771">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="carDate-${state.carCount}" value="${checkInDate}">
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <input type="time" id="carTime-${state.carCount}" value="12:00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pick Up Point</label>
+                        <div style="position: relative;">
+                            <input type="text" id="carPickup-${state.carCount}" placeholder="Enter location or select below" 
+                                   list="pickupLocations-${state.carCount}" class="location-input">
+                            <datalist id="pickupLocations-${state.carCount}">
+                                <option value="Main Lobby">
+                                <option value="TSN Airport">
+                            </datalist>
+                            <div class="quick-select-buttons" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button type="button" onclick="setLocation('carPickup-${state.carCount}', 'Main Lobby')" 
+                                        class="quick-btn">Main Lobby</button>
+                                <button type="button" onclick="setLocation('carPickup-${state.carCount}', 'TSN Airport')" 
+                                        class="quick-btn">TSN Airport</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Drop Off Point</label>
+                        <div style="position: relative;">
+                            <input type="text" id="carDropoff-${state.carCount}" placeholder="Enter location or select below" 
+                                   list="dropoffLocations-${state.carCount}" class="location-input">
+                            <datalist id="dropoffLocations-${state.carCount}">
+                                <option value="Main Lobby">
+                                <option value="TSN Airport">
+                            </datalist>
+                            <div class="quick-select-buttons" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button type="button" onclick="setLocation('carDropoff-${state.carCount}', 'Main Lobby')" 
+                                        class="quick-btn">Main Lobby</button>
+                                <button type="button" onclick="setLocation('carDropoff-${state.carCount}', 'TSN Airport')" 
+                                        class="quick-btn">TSN Airport</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Payment</label>
+                        <select id="carPayment-${state.carCount}">
+                            <option value="Free Comp (If guest enough 2000 points)">Free Comp (2000+ points)</option>
+                            <option value="Guest Comp">Guest Comp</option>
+                            <option value="GOA">GOA</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Authorizer</label>
+                        <input type="text" id="carAuthorizer-${state.carCount}" value="xujian">
+                    </div>
+                </div>
+            `;
+            container.appendChild(carDiv);
+        }
+
+        function setLocation(inputId, location) {
+            document.getElementById(inputId).value = location;
+        }
+
+        // ========================================
+        // V2.0.6: PID Database Functions - 支持Old/New PID
+        // ========================================
+
+        function handlePIDFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // 显示Loading状态
+            const statusEl = document.getElementById('pidStatus');
+            const buttonEl = document.getElementById('importButtonText');
+            
+            statusEl.innerHTML = `
+                <span style="color: #3b82f6; font-weight: 600;">⏳ Reading Excel file...</span>
+            `;
+            buttonEl.textContent = 'Loading...';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    // 读取Excel
+                    statusEl.innerHTML = `
+                        <span style="color: #3b82f6; font-weight: 600;">📖 Parsing Excel data...</span>
+                    `;
+                    
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                    const totalRows = jsonData.length;
+                    
+                    // 清空数据库
+                    state.pidDatabase.clear();
+                    state.oldPIDIndex.clear();
+                    state.newPIDIndex.clear();
+                    let count = 0;
+                    let processed = 0;
+
+                    // 分批处理函数
+                    const BATCH_SIZE = 5000;
+                    let batchIndex = 0;
+
+                    function processBatch() {
+                        const start = batchIndex * BATCH_SIZE;
+                        const end = Math.min(start + BATCH_SIZE, totalRows);
+                        
+                        // 处理当前批次
+                        for (let i = start; i < end; i++) {
+                            const row = jsonData[i];
+                            const oldPID = String(row['Old PID'] || '').trim();
+                            const newPID = String(row['New PID'] || '').trim();
+                            const name = String(row['Player Name'] || '').trim();
+
+                            if (name && (oldPID || newPID)) {
+                                // 使用唯一ID存储（优先使用newPID，否则使用oldPID）
+                                const uniqueID = newPID || oldPID;
+                                
+                                state.pidDatabase.set(uniqueID, {
+                                    oldPID: oldPID || null,
+                                    newPID: newPID || null,
+                                    name: name
+                                });
+                                
+                                // 建立索引
+                                if (oldPID) {
+                                    state.oldPIDIndex.set(oldPID, uniqueID);
+                                }
+                                if (newPID) {
+                                    state.newPIDIndex.set(newPID, uniqueID);
+                                }
+                                
+                                count++;
+                            }
+                            processed++;
+                        }
+
+                        // 更新进度
+                        const progress = Math.round((processed / totalRows) * 100);
+                        const progressBar = '█'.repeat(Math.floor(progress / 5)) + '░'.repeat(20 - Math.floor(progress / 5));
+                        
+                        statusEl.innerHTML = `
+                            <div style="font-weight: 600; color: #3b82f6; margin-bottom: 0.25rem;">
+                                📥 Importing... ${progress}%
+                            </div>
+                            <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-secondary); letter-spacing: -1px;">
+                                ${progressBar}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                ${processed.toLocaleString()} / ${totalRows.toLocaleString()} records
+                            </div>
+                        `;
+
+                        // 如果还有数据，继续下一批
+                        if (end < totalRows) {
+                            batchIndex++;
+                            setTimeout(processBatch, 10);
+                        } else {
+                            finishImport();
+                        }
+                    }
+
+                    function finishImport() {
+                        state.pidDatabaseLoaded = true;
+
+                        // 更新UI - 成功状态
+                        statusEl.innerHTML = `
+                            <span style="color: #10b981; font-weight: 600;">✅ Database loaded</span> 
+                            <span style="color: var(--text-secondary);">• ${count.toLocaleString()} records ready</span>
+                        `;
+                        buttonEl.textContent = 'Re-import Excel';
+
+                        // 成功提示
+                        alert(`✅ Success! Loaded ${count.toLocaleString()} PIDs from ${file.name}`);
+                    }
+
+                    // 开始处理
+                    processBatch();
+
+                } catch (error) {
+                    console.error('Error reading Excel file:', error);
+                    statusEl.innerHTML = `
+                        <span style="color: #ef4444; font-weight: 600;">❌ Import failed</span>
+                    `;
+                    buttonEl.textContent = 'Import Excel';
+                    alert('❌ Error reading Excel file. Please make sure it\'s a valid .xlsx file.');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // PID查询函数（带防抖）- 支持Old/New PID双向查询
+        let pidSearchTimeout = null;
+        function searchPID(oldPIDInputId, newPIDInputId, nameInputId, infoBoxId) {
+            clearTimeout(pidSearchTimeout);
+            
+            const oldPIDInput = document.getElementById(oldPIDInputId);
+            const newPIDInput = document.getElementById(newPIDInputId);
+            const nameInput = document.getElementById(nameInputId);
+            const infoBox = document.getElementById(infoBoxId);
+            
+            const oldPID = oldPIDInput.value.trim();
+            const newPID = newPIDInput.value.trim();
+
+            // 清除之前的状态
+            oldPIDInput.classList.remove('pid-found', 'pid-not-found', 'pid-searching');
+            newPIDInput.classList.remove('pid-found', 'pid-not-found', 'pid-searching');
+            if (infoBox) {
+                infoBox.className = 'pid-info-box';
+                infoBox.style.display = 'none';
+            }
+
+            // 如果两个都为空，清空名字
+            if (!oldPID && !newPID) {
+                nameInput.value = '';
+                nameInput.readOnly = false;
+                return;
+            }
+
+            if (!state.pidDatabaseLoaded) {
+                if (infoBox) {
+                    infoBox.className = 'pid-info-box warning';
+                    infoBox.innerHTML = '⚠️ Please import PID database first';
+                    infoBox.style.display = 'block';
+                }
+                nameInput.readOnly = false;
+                return;
+            }
+
+            // 显示搜索动画
+            if (oldPID) oldPIDInput.classList.add('pid-searching');
+            if (newPID) newPIDInput.classList.add('pid-searching');
+
+            pidSearchTimeout = setTimeout(() => {
+                let result = null;
+                let searchedBy = '';
+
+                // 优先搜索Old PID
+                if (oldPID) {
+                    const uniqueID = state.oldPIDIndex.get(oldPID);
+                    if (uniqueID) {
+                        result = state.pidDatabase.get(uniqueID);
+                        searchedBy = 'old';
+                    }
+                }
+
+                // 如果Old PID没找到，搜索New PID
+                if (!result && newPID) {
+                    const uniqueID = state.newPIDIndex.get(newPID);
+                    if (uniqueID) {
+                        result = state.pidDatabase.get(uniqueID);
+                        searchedBy = 'new';
+                    }
+                }
+
+                oldPIDInput.classList.remove('pid-searching');
+                newPIDInput.classList.remove('pid-searching');
+
+                if (result) {
+                    // 找到了 - 自动填充所有字段
+                    oldPIDInput.classList.add('pid-found');
+                    newPIDInput.classList.add('pid-found');
+                    
+                    // 填充Old PID
+                    if (result.oldPID && !oldPID) {
+                        oldPIDInput.value = result.oldPID;
+                    }
+                    
+                    // 填充New PID
+                    if (result.newPID && !newPID) {
+                        newPIDInput.value = result.newPID;
+                    }
+                    
+                    // 填充名字
+                    nameInput.value = result.name;
+                    nameInput.readOnly = true;
+                    // 触发大写转换
+                    nameInput.dispatchEvent(new Event('input'));
+                    // 如果是高尔夫客人，更新Pax数量
+                    if (typeof updateGolfPax === 'function') updateGolfPax();
+
+                    if (infoBox) {
+                        infoBox.className = 'pid-info-box success';
+                        let foundMsg = searchedBy === 'old' ? 'Old PID' : 'New PID';
+                        infoBox.innerHTML = `✅ Found by ${foundMsg}: <strong>${result.name}</strong>`;
+                        infoBox.style.display = 'block';
+                    }
+                } else {
+                    // 没找到
+                    oldPIDInput.classList.add('pid-not-found');
+                    newPIDInput.classList.add('pid-not-found');
+                    nameInput.value = '';
+                    nameInput.readOnly = false;
+
+                    if (infoBox) {
+                        infoBox.className = 'pid-info-box warning';
+                        infoBox.innerHTML = '⚠️ PID not found in database - Please enter name manually';
+                        infoBox.style.display = 'block';
+                    }
+                }
+            }, 300);
+        }
+
+        // 快捷添加服务功能
+        function addQuickService(service) {
+            if (state.selectedServices.has(service)) {
+                alert('This service is already added!');
+                return;
+            }
+
+            // 添加服务到已选服务
+            state.selectedServices.add(service);
+
+            // 更新breadcrumb
+            const services = Array.from(state.selectedServices).map(s => {
+                const map = { room: 'Room Booking', car: 'Car Service', golf: 'Golf Booking', bus: 'Bus Service' };
+                return map[s];
+            }).join(' + ');
+            document.getElementById('breadcrumb').textContent = `Selected Services: ${services}`;
+
+            // 在bookingContent中添加新服务的表单
+            const content = document.getElementById('bookingContent');
+            
+            if (service === 'car') {
+                content.insertAdjacentHTML('beforeend', generateCarForm());
+                setTimeout(() => addCar(), 100);
+            } else if (service === 'golf') {
+                content.insertAdjacentHTML('beforeend', generateGolfForm());
+                if (!state.selectedServices.has('room')) {
+                    setTimeout(() => addGolfGuest(), 100);
+                }
+            } else if (service === 'bus') {
+                content.insertAdjacentHTML('beforeend', generateBusForm());
+                if (state.selectedServices.has('room')) {
+                    setTimeout(() => syncGuestInfoToOtherServices(), 150);
+                }
+            }
+
+            // 刷新Room表单以更新快捷按钮
+            refreshQuickServiceButtons();
+
+            // 滚动到新添加的表单
+            setTimeout(() => {
+                const cards = document.querySelectorAll('.card');
+                const lastCard = cards[cards.length - 1];
+                if (lastCard) {
+                    lastCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 200);
+        }
+
+        // 刷新快捷服务按钮（不重新生成整个表单）
+        function refreshQuickServiceButtons() {
+            const roomCard = document.querySelector('#bookingContent .card');
+            if (!roomCard) return;
+
+            const quickServiceDiv = roomCard.querySelector('[style*="Need other services"]')?.parentElement;
+            if (!quickServiceDiv) return;
+
+            const buttonsContainer = quickServiceDiv.querySelector('[style*="display: flex"]');
+            if (!buttonsContainer) return;
+
+            // 重新生成按钮
+            buttonsContainer.innerHTML = '';
+            if (!state.selectedServices.has('car')) {
+                buttonsContainer.innerHTML += '<button class="quick-service-btn" onclick="addQuickService(\'car\')">+ Car Service</button>';
+            }
+            if (!state.selectedServices.has('golf')) {
+                buttonsContainer.innerHTML += '<button class="quick-service-btn" onclick="addQuickService(\'golf\')">+ Golf Booking</button>';
+            }
+            if (!state.selectedServices.has('bus')) {
+                buttonsContainer.innerHTML += '<button class="quick-service-btn" onclick="addQuickService(\'bus\')">+ Bus Service</button>';
+            }
+
+            // 如果所有服务都已添加，显示提示
+            if (state.selectedServices.size === 4) {
+                quickServiceDiv.innerHTML = '<div style="font-size: 0.85rem; color: var(--text-secondary); padding: 0.5rem 0;">✅ All services added</div>';
+            }
+        }
+
+        function removeCar(id) {
+            document.getElementById(`car-${id}`)?.remove();
+        }
+
+        function updateGolfPax() {
+            const active = state.golfGuests.filter(id => document.getElementById(`golfGuest-${id}`));
+            const filled = active.filter(id => (document.getElementById(`golfGuestName-${id}`)?.value || '').trim());
+            const paxEl = document.getElementById('golfPax');
+            if (paxEl) paxEl.value = filled.length > 0 ? filled.length : active.length;
+        }
+
+        function addGolfGuest() {
+            const count = state.golfGuests.length + 1;
+            state.golfGuests.push(count);
+            const container = document.getElementById('golfGuestsContainer');
+            const guestDiv = document.createElement('div');
+            guestDiv.className = 'guest-group';
+            guestDiv.id = `golfGuest-${count}`;
+            guestDiv.innerHTML = `
+                <div class="guest-header">
+                    <span class="guest-number">Guest #${count}</span>
+                    <button class="remove-btn" onclick="removeGolfGuest(${count})">Remove</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Old PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" 
+                                   id="golfGuestOldPID-${count}" 
+                                   class="pid-input"
+                                   placeholder="Enter Old PID"
+                                   oninput="searchPID('golfGuestOldPID-${count}', 'golfGuestNewPID-${count}', 'golfGuestName-${count}', 'golfPidInfo-${count}')">
+                            <span class="pid-status-icon" id="golfOldPidIcon-${count}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>New PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" 
+                                   id="golfGuestNewPID-${count}" 
+                                   class="pid-input"
+                                   value="New"
+                                   placeholder="Enter New PID"
+                                   oninput="searchPID('golfGuestOldPID-${count}', 'golfGuestNewPID-${count}', 'golfGuestName-${count}', 'golfPidInfo-${count}')">
+                            <span class="pid-status-icon" id="golfNewPidIcon-${count}"></span>
+                        </div>
+                        <div id="golfPidInfo-${count}" class="pid-info-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" 
+                               id="golfGuestName-${count}"
+                               placeholder="Auto-filled from PID"
+                               oninput="this.value=this.value.toUpperCase(); updateGolfPax()">
+                    </div>
+                </div>
+            `;
+            container.appendChild(guestDiv);
+            updateGolfPax();
+        }
+
+        function removeGolfGuest(id) {
+            document.getElementById(`golfGuest-${id}`)?.remove();
+            state.golfGuests = state.golfGuests.filter(g => g !== id);
+            updateGolfPax();
+        }
+
+        function toggleBusRoute(route) {
+            const isActive = state.busRoutes[route];
+            const formId = route === 'hcmToHt' ? 'busFormHcmToHt' : 'busFormHtToHcm';
+            const btnId = route === 'hcmToHt' ? 'btnHcmToHt' : 'btnHtToHcm';
+            
+            if (isActive) {
+                state.busRoutes[route] = false;
+                document.getElementById(formId).style.display = 'none';
+                document.getElementById(btnId).classList.remove('active');
+            } else {
+                state.busRoutes[route] = true;
+                document.getElementById(formId).style.display = 'block';
+                document.getElementById(btnId).classList.add('active');
+            }
+        }
+
+        function autoFillGolfGuests() {
+            document.getElementById('golfGuestsContainer').innerHTML = '';
+            state.golfGuests = [];
+
+            for (let i = 1; i <= state.guestCount; i++) {
+                if (!document.getElementById(`guest-${i}`)) continue;
+                const name = document.getElementById(`guestName-${i}`)?.value;
+                const oldPID = document.getElementById(`guestOldPID-${i}`)?.value || '';
+                const newPID = document.getElementById(`guestNewPID-${i}`)?.value || 'New';
+
+                if (name) {
+                    addGolfGuest();
+                    const newId = state.golfGuests[state.golfGuests.length - 1];
+                    setTimeout(((id, n, o, p) => () => {
+                        document.getElementById(`golfGuestName-${id}`).value = n;
+                        document.getElementById(`golfGuestOldPID-${id}`).value = o;
+                        document.getElementById(`golfGuestNewPID-${id}`).value = p;
+                    })(newId, name, oldPID, newPID), 50);
+                }
+
+                // 同步 Sharer
+                const sharerForm = document.getElementById(`sharerForm-${i}`);
+                if (sharerForm && sharerForm.style.display !== 'none') {
+                    const sharerName = document.getElementById(`sharerName-${i}`)?.value;
+                    const sharerOldPID = document.getElementById(`sharerOldPID-${i}`)?.value || '';
+                    const sharerNewPID = document.getElementById(`sharerNewPID-${i}`)?.value || 'New';
+                    if (sharerName) {
+                        addGolfGuest();
+                        const sharerId = state.golfGuests[state.golfGuests.length - 1];
+                        setTimeout(((id, n, o, p) => () => {
+                            document.getElementById(`golfGuestName-${id}`).value = n;
+                            document.getElementById(`golfGuestOldPID-${id}`).value = o;
+                            document.getElementById(`golfGuestNewPID-${id}`).value = p;
+                        })(sharerId, sharerName, sharerOldPID, sharerNewPID), 50);
+                    }
+                }
+            }
+
+            if (event && event.target && event.target.textContent.includes('Sync')) {
+                showMessage('✓ Room guests synced successfully! (including sharers)');
+            }
+            setTimeout(updateGolfPax, 100);
+        }
+
+        function generateAllEmails() {
+            // V2.0.9: A171 Patron Registration mode
+            if (state.isA171Mode) {
+                generateA171Email();
+                return;
+            }
+
+            // V2.0.8: 日期校验 — 有订房时必须填写入住和退房日期
+            if (state.selectedServices.has('room')) {
+                const checkIn  = document.getElementById('checkIn')?.value;
+                const checkOut = document.getElementById('checkOut')?.value;
+                if (!checkIn && !checkOut) {
+                    alert('⚠️ Please fill in both Check In and Check Out dates before generating the email.');
+                    document.getElementById('checkIn').focus();
+                    return;
+                }
+                if (!checkIn) {
+                    alert('⚠️ Please fill in the Check In date before generating the email.');
+                    document.getElementById('checkIn').focus();
+                    return;
+                }
+                if (!checkOut) {
+                    alert('⚠️ Please fill in the Check Out date before generating the email.');
+                    document.getElementById('checkOut').focus();
+                    return;
+                }
+            }
+            let combinedEmail = '';
+            let subject = '';
+
+            if (state.selectedServices.has('room')) {
+                const roomEmail = generateRoomEmail();
+                const subjectMatch = roomEmail.match(/Subject:\s*(.+?)$/m);
+                subject = subjectMatch ? subjectMatch[1].trim() : 'Booking Request';
+                const roomBody = roomEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                combinedEmail = roomBody;
+            }
+
+            if (state.selectedServices.has('car')) {
+                const carEmail = generateCarEmail();
+                const carBody = carEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                
+                if (combinedEmail) {
+                    combinedEmail += '\n\n---\n\n' + carBody;
+                } else {
+                    combinedEmail = carBody;
+                    const subjectMatch = carEmail.match(/Subject:\s*(.+?)$/m);
+                    subject = subjectMatch ? subjectMatch[1].trim() : 'Car Booking Request';
+                }
+            }
+
+            if (state.selectedServices.has('golf')) {
+                const golfEmail = generateGolfEmail();
+                const golfBody = golfEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                
+                if (combinedEmail) {
+                    combinedEmail += '\n\n---\n\n' + golfBody;
+                } else {
+                    combinedEmail = golfBody;
+                    const subjectMatch = golfEmail.match(/Subject:\s*(.+?)$/m);
+                    subject = subjectMatch ? subjectMatch[1].trim() : 'Golf Booking Request';
+                }
+            }
+
+            if (state.selectedServices.has('bus') && !state.selectedServices.has('room')) {
+                const busEmail = generateBusEmail();
+                const busBody = busEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+                
+                if (combinedEmail) {
+                    combinedEmail += '\n\n---\n\n' + busBody;
+                } else {
+                    combinedEmail = busBody;
+                    const subjectMatch = busEmail.match(/Subject:\s*(.+?)$/m);
+                    subject = subjectMatch ? subjectMatch[1].trim() : 'Bus Booking Request';
+                }
+            }
+
+            // 如果有多个服务并且包含订房或高尔夫，重新生成标题
+            if (state.selectedServices.size > 1 && (state.selectedServices.has('room') || state.selectedServices.has('golf'))) {
+                const services = [];
+                if (state.selectedServices.has('room')) services.push('Room');
+                if (state.selectedServices.has('car')) services.push('Car');
+                if (state.selectedServices.has('golf')) services.push('Golf');
+                if (state.selectedServices.has('bus')) services.push('Bus');
+                
+                // 获取第一位客人的实际信息 - 使用New PID
+                let firstGuestNewPID = '';
+                let firstGuestName = '';
+                let checkInDate = '';
+                
+                if (state.selectedServices.has('room')) {
+                    // 从订房获取信息
+                    const g1OldPID = document.getElementById('guestOldPID-1')?.value?.trim() || '';
+                    const g1NewPID = document.getElementById('guestNewPID-1')?.value?.trim() || '';
+                    firstGuestNewPID = resolvePID(g1OldPID, g1NewPID);
+                    firstGuestName = document.getElementById('guestName-1')?.value?.trim() || '';
+                    checkInDate = formatDate(document.getElementById('checkIn')?.value);
+                } else if (state.selectedServices.has('golf')) {
+                    // 从高尔夫获取信息
+                    const g1OldPID = document.getElementById('golfGuestOldPID-1')?.value?.trim() || '';
+                    const g1NewPID = document.getElementById('golfGuestNewPID-1')?.value?.trim() || '';
+                    firstGuestNewPID = resolvePID(g1OldPID, g1NewPID);
+                    firstGuestName = document.getElementById('golfGuestName-1')?.value?.trim() || '';
+                    const golfDateTime = document.getElementById('golfDateTime')?.value;
+                    if (golfDateTime) {
+                        checkInDate = formatDate(golfDateTime.split('T')[0]);
+                    }
+                }
+                
+                const agent = document.getElementById('agentName')?.value || '';
+                
+                // 只有当有实际的客人信息时才生成标题
+                if (firstGuestName) {
+                    // firstGuestNewPID 已通过 resolvePID 处理（V2.0.7）
+                    subject = `[${agent}] ${firstGuestNewPID} ${firstGuestName} ${services.join(' + ')} Booking on ${checkInDate}`;
+                }
+            }
+
+            const finalEmail = `Subject: ${subject}\n\n${combinedEmail}`;
+            window.generatedEmail = finalEmail;
+
+            // 渲染为 HTML（<br> 换行），手动框选复制到邮件时也能保留格式
+            const previewEl = document.getElementById('emailPreview');
+            previewEl.innerHTML = finalEmail
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\r?\n/g, '<br>\n');
+            document.getElementById('previewCard').style.display = 'block';
+            document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // V2.0.16: ONE DAY TRIP Patron Registration email
+        function generateA171Email() {
+            const names = [];
+            const pids = [];
+            for (let i = 1; i <= state.a171GuestCount; i++) {
+                const nameEl = document.getElementById(`a171GuestName-${i}`);
+                const oldPID = document.getElementById(`a171OldPID-${i}`)?.value?.trim() || '';
+                const newPID = document.getElementById(`a171NewPID-${i}`)?.value?.trim() || '';
+                const name = nameEl?.value?.trim();
+                if (name) {
+                    names.push(name);
+                    pids.push(resolvePID(oldPID, newPID));
+                }
+            }
+
+            if (names.length === 0) {
+                alert('⚠️ Please add at least one patron name.');
+                return;
+            }
+
+            const agent = document.getElementById('a171Agent')?.value?.trim();
+            if (!agent) {
+                alert('⚠️ Please select or enter an agent name.');
+                document.getElementById('a171Agent').focus();
+                return;
+            }
+
+            const visitDate = document.getElementById('a171Date')?.value;
+            if (!visitDate) {
+                alert('⚠️ Please fill in the Visit Date.');
+                document.getElementById('a171Date').focus();
+                return;
+            }
+
+            const dateStr = formatDate(visitDate);
+            const firstName = names[0];
+            const firstPID = pids[0];
+
+            let subject = '';
+            let body = '';
+
+            if (state.a171SubjectType === 'oneday') {
+                // Subject: [Agent] PID Name One Day Trip Date
+                subject = `[${agent}] ${firstPID} ${firstName} One Day Trip ${dateStr}`;
+
+                // Body: single intro line, then all guests listed below
+                const guestLines = names.map((name, idx) => `${pids[idx]} ${name}`).join(',\n');
+
+                body = `Dear @The Grand Ho Tram - HTR Management @The Grand Ho Tram - Casino Audit
+
+Please note that the guest one day trip : 
+${guestLines}`;
+
+            } else {
+                // Patron Registration
+                subject = `[${agent}] Patron Registration - ${firstName} ${dateStr}`;
+
+                body = `Dear @The Grand Ho Tram - HTR Management @The Grand Ho Tram - Casino Audit
+
+Please allow for signing manifest form.  
+
+Patrons do not need room.  
+
+Please see attached for more information:
+
+${names.join('\n')}`;
+            }
+
+            const finalEmail = `Subject: ${subject}\n\n${body}`;
+            window.generatedEmail = finalEmail;
+            window.isOneDayTrip = (state.a171SubjectType === 'oneday');
+
+            const previewEl = document.getElementById('emailPreview');
+            previewEl.innerHTML = finalEmail
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\r?\n/g, '<br>\n');
+            document.getElementById('previewCard').style.display = 'block';
+            document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateRoomEmail() {
+            const agent = document.getElementById('agentName')?.value;
+            const hotel = document.getElementById('hotelName')?.value;
+            const authorizer = document.getElementById('authorizer')?.value || 'Jian.Xu';
+            const checkIn = formatDate(document.getElementById('checkIn')?.value);
+            const checkOut = formatDate(document.getElementById('checkOut')?.value);
+            const rateCode = document.getElementById('rateCode')?.value || 'CASBAR';
+            const deposit = document.getElementById('deposit')?.value || 'No';
+
+            let guestLines = [];
+            let roomLines = [];
+            let promotions = [];
+            
+            // 获取第一位客人的PID（V2.0.7: 智能选择）
+            let firstGuestOldPID = document.getElementById('guestOldPID-1')?.value?.trim() || '';
+            let firstGuestNewPID = document.getElementById('guestNewPID-1')?.value?.trim() || '';
+            let firstGuestName = document.getElementById('guestName-1')?.value?.trim() || '';
+            
+            // 智能PID：有新ID用新ID，只有旧ID用旧ID，都没有用"New"
+            const displayPID = resolvePID(firstGuestOldPID, firstGuestNewPID);
+            for (let i = 1; i <= state.guestCount; i++) {
+                if (!document.getElementById(`guest-${i}`)) continue;
+                const name = document.getElementById(`guestName-${i}`)?.value;
+                const oldPID = document.getElementById(`guestOldPID-${i}`)?.value?.trim() || '';
+                const newPID = document.getElementById(`guestNewPID-${i}`)?.value?.trim() || '';
+                const roomType = document.getElementById(`roomType-${i}`)?.value;
+                const sharerName = document.getElementById(`sharerName-${i}`)?.value;
+                const sharerOldPID = document.getElementById(`sharerOldPID-${i}`)?.value?.trim() || '';
+                const sharerNewPID = document.getElementById(`sharerNewPID-${i}`)?.value?.trim() || '';
+
+                if (name && roomType) {
+                    const pidDisplay = resolvePID(oldPID, newPID);
+                    let guestLine = `${name} - ${pidDisplay}`;
+                    // 如果有Sharer名字，就添加Sharer信息
+                    if (sharerName) {
+                        const finalSharerPID = resolvePID(sharerOldPID, sharerNewPID);
+                        guestLine += `\n(Sharer: ${sharerName} - ${finalSharerPID})`;
+                    }
+                    guestLines.push(guestLine);
+                    roomLines.push(`${name} - ${roomType}`);
+                    
+                    // 收集积分
+                    const roomSelect = document.getElementById(`roomType-${i}`);
+                    const promo = roomSelect?.options[roomSelect.selectedIndex]?.dataset?.promotion;
+                    if (promo && !promotions.includes(promo)) {
+                        promotions.push(promo);
+                    }
+                }
+            }
+
+            const displayName = firstGuestName || 'Guest';
+            const subject = `[${agent}] ${displayPID} ${displayName} ${hotel} Hotel Room Booking on ${checkIn}`;
+            
+            const promotionDisplay = promotions.length > 0 ? promotions.join('/') : '';
+
+            let email = `Subject: ${subject}
+
+Dear RC team,
+
+Kindly assist us make room booking as below:
+
+Guest name: ${guestLines.join('\n')}
+
+Room type: ${hotel}
+${roomLines.join('\n')}
+
+Check in: ${checkIn}
+Check out: ${checkOut}
+Rate code: ${rateCode}
+Promotion: ${promotionDisplay}
+Deposit: ${deposit}
+Trip authorizer: ${authorizer}`;
+
+            if (state.selectedServices.has('bus')) {
+                const busPassenger = document.getElementById('busPassenger')?.value;
+                const busAuthorizer = document.getElementById('busAuthorizer')?.value || 'Jian.Xu';
+
+                email += `
+
+Hi @Grand Service
+
+Please help to arrange bus seats as below:
+
+Name: ${busPassenger}
+`;
+
+                if (state.busRoutes.hcmToHt) {
+                    const time = document.getElementById('timeHcmToHt')?.value || '12:00 pm';
+                    const date = formatDateShort(document.getElementById('dateHcmToHt')?.value);
+                    const seats = document.getElementById('seatsHcmToHt')?.value || '5';
+                    
+                    email += `
+Route: HCM to HT ${time} ${date}
+Seats: ${seats}
+`;
+                }
+
+                if (state.busRoutes.htToHcm) {
+                    const time = document.getElementById('timeHtToHcm')?.value || '14:00 pm';
+                    const date = formatDateShort(document.getElementById('dateHtToHcm')?.value);
+                    const seats = document.getElementById('seatsHtToHcm')?.value || '5';
+                    
+                    email += `
+Route: HT to HCM ${time} ${date}
+Seats: ${seats}
+`;
+                }
+
+                email += `
+Authorizer: ${busAuthorizer}`;
+            }
+
+            return email;
+        }
+
+        function generateCarEmail() {
+            let carDetails = [];
+            
+            for (let i = 1; i <= state.carCount; i++) {
+                if (!document.getElementById(`car-${i}`)) continue;
+                const carType = document.getElementById(`carType-${i}`)?.value;
+                const name = document.getElementById(`carName-${i}`)?.value;
+                const guests = document.getElementById(`carGuests-${i}`)?.value;
+                const phone = document.getElementById(`carPhone-${i}`)?.value;
+                const date = document.getElementById(`carDate-${i}`)?.value;
+                const time = document.getElementById(`carTime-${i}`)?.value;
+                const pickup = document.getElementById(`carPickup-${i}`)?.value;
+                const dropoff = document.getElementById(`carDropoff-${i}`)?.value;
+
+                if (name && date && time) {
+                    const formattedDate = formatDateShort(date);
+                    const formattedTime = time; // Already in HH:MM format
+
+                    carDetails.push(`${i}, Car Type: ${carType}
+
+Name: ${name}
+
+Number of guests: ${guests}
+
+Phone: ${phone}
+
+Date & time: ${formattedTime} ${formattedDate}
+
+Pick up point: ${pickup}
+
+Drop off point: ${dropoff}`);
+                }
+            }
+
+            const payment = document.getElementById(`carPayment-1`)?.value || 'Free Comp (If guest enough 2000 points)';
+            const authorizer = document.getElementById(`carAuthorizer-1`)?.value || 'xujian';
+
+            return `Subject: VIP Car Service Request
+
+Dear @Concierge Services
+
+Please kindly arrange a VIP car as the followings:
+
+${carDetails.join('\n\n')}
+
+Payment: ${payment}
+Authorizer: ${authorizer}`;
+        }
+
+        function generateGolfEmail() {
+            const dateTime = document.getElementById('golfDateTime')?.value;
+            const pax = document.getElementById('golfPax')?.value;
+            const payment = document.getElementById('golfPayment')?.value;
+            const authorizer = document.getElementById('golfAuthorizer')?.value;
+            const note = document.getElementById('golfNote')?.value;
+
+            let guestNames = [];
+            state.golfGuests.forEach(id => {
+                const name = document.getElementById(`golfGuestName-${id}`)?.value;
+                const oldPID = document.getElementById(`golfGuestOldPID-${id}`)?.value?.trim() || '';
+                const newPID = document.getElementById(`golfGuestNewPID-${id}`)?.value?.trim() || '';
+                if (name) guestNames.push(`${name} - ${resolvePID(oldPID, newPID)}`);
+            });
+
+            const dt = new Date(dateTime);
+            const time = dt.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: true});
+            const date = formatDateShort(dateTime?.split('T')[0]);
+
+            return `Subject: Golf Booking Request
+
+Dear @The Bluffs Ho Tram - Bookings
+
+Guest's name:
+
+${guestNames.join('\n')}
+
+Date & Time: ${date} ${time}
+
+No. of pax: ${pax}
+
+Note: ${note}
+
+Payment: ${payment}
+
+Authorizer: ${authorizer}`;
+        }
+
+        function generateBusEmail() {
+            const busPassenger = document.getElementById('busPassenger')?.value;
+            const authorizer = document.getElementById('busAuthorizer')?.value || 'Jian.Xu';
+
+            let busContent = `Hi @Grand Service
+
+Please help to arrange bus seats as below:
+
+Name: ${busPassenger}
+`;
+
+            if (state.busRoutes.hcmToHt) {
+                const time = document.getElementById('timeHcmToHt')?.value || '12:00 pm';
+                const date = formatDateShort(document.getElementById('dateHcmToHt')?.value);
+                const seats = document.getElementById('seatsHcmToHt')?.value || '5';
+                
+                busContent += `
+Route: HCM to HT ${time} ${date}
+Seats: ${seats}
+`;
+            }
+
+            if (state.busRoutes.htToHcm) {
+                const time = document.getElementById('timeHtToHcm')?.value || '14:00 pm';
+                const date = formatDateShort(document.getElementById('dateHtToHcm')?.value);
+                const seats = document.getElementById('seatsHtToHcm')?.value || '5';
+                
+                busContent += `
+Route: HT to HCM ${time} ${date}
+Seats: ${seats}
+`;
+            }
+
+            busContent += `
+Authorizer: ${authorizer}`;
+
+            return `Subject: Bus Service Request
+
+${busContent}`;
+        }
+
+        function copyAllEmails() {
+            if (!window.generatedEmail) {
+                alert('Please generate email first!');
+                return;
+            }
+
+            const plainText = window.generatedEmail;
+
+            // 将纯文本转为 HTML，保留换行，粘贴到 Outlook/Gmail 时保持格式
+            function toHtml(text) {
+                return text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/\r?\n/g, '<br>\n');
+            }
+
+            const htmlText = `<!DOCTYPE html><html><body><p style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;white-space:pre-wrap;">${toHtml(plainText)}</p></body></html>`;
+
+            // 优先使用 ClipboardItem（同时写 text/plain + text/html），兼容旧浏览器
+            if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+                const item = new ClipboardItem({
+                    'text/plain': new Blob([plainText], { type: 'text/plain' }),
+                    'text/html':  new Blob([htmlText],  { type: 'text/html'  })
+                });
+                navigator.clipboard.write([item]).then(() => {
+                    showMessage('✓ Copied! Paste directly into Outlook / Gmail.');
+                }).catch(() => {
+                    navigator.clipboard.writeText(plainText).then(() => {
+                        showMessage('✓ Email copied to clipboard!');
+                    }).catch(() => {
+                        alert('Copy failed. Please copy manually.');
+                    });
+                });
+            } else {
+                // 降级：execCommand fallback（iOS Safari 等）
+                const textarea = document.createElement('textarea');
+                textarea.value = plainText;
+                textarea.style.cssText = 'position:fixed;opacity:0;top:0;left:0;';
+                document.body.appendChild(textarea);
+                textarea.focus();
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showMessage('✓ Email copied to clipboard!');
+                } catch (e) {
+                    alert('Copy failed. Please copy manually.');
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+        }
+
+        function sendEmail() {
+            if (!window.generatedEmail) {
+                alert('Please generate email first!');
+                return;
+            }
+
+            const subjectMatch = window.generatedEmail.match(/Subject:\s*(.+?)$/m);
+            const subject = subjectMatch ? subjectMatch[1].trim() : 'Booking Request';
+            const body = window.generatedEmail.replace(/^Subject:\s*.+?\n+/m, '').trim();
+
+            // V2.0.16: One Day Trip adds casinoaudit as direct recipient
+            let recipients, ccRecipients;
+
+            if (state.isA171Mode && window.isOneDayTrip) {
+                recipients = [
+                    'casinoaudit@thegrandhotram.com',
+                    'concierge@thegrandhotram.com',
+                    'Front.Desk@thegrandhotram.com',
+                    'grandservice@thegrandhotram.com',
+                    'HIR.receptionist@thegrandhotram.com',
+                    'IC.receptionist@thegrandhotram.com',
+                    'Guestrelations.Management@thegrandhotram.com',
+                    'rooms.coordinator@thegrandhotram.com'
+                ].join(',');
+                ccRecipients = [
+                    'rewards@thegrandhotram.com',
+                    'im.gcsea@thegrandhotram.com',
+                    'HTR@thegrandhotram.com'
+                ].join(',');
+            } else {
+                recipients = [
+                    'concierge@thegrandhotram.com',
+                    'Front.Desk@thegrandhotram.com',
+                    'grandservice@thegrandhotram.com',
+                    'HIR.receptionist@thegrandhotram.com',
+                    'IC.receptionist@thegrandhotram.com',
+                    'Guestrelations.Management@thegrandhotram.com',
+                    'rooms.coordinator@thegrandhotram.com'
+                ].join(',');
+                ccRecipients = [
+                    'rewards@thegrandhotram.com',
+                    'im.gcsea@thegrandhotram.com',
+                    'HTR@thegrandhotram.com'
+                ].join(',');
+            }
+
+            const mailtoLink = `mailto:${recipients}?cc=${ccRecipients}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = mailtoLink;
+        }
+
+        // Google Sheets保存功能
+        function saveToGoogleSheets() {
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOpykMzPHrhi6pcthRdASWMQdjXO0VQJilRd9R67i1_GRqtBOPBcHDD8fJrHNjY1znCg/exec';
+
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+
+            let data = {};
+
+            // V2.0.15: ONE DAY TRIP mode
+            if (state.isA171Mode) {
+                const guests = [];
+                for (let i = 1; i <= state.a171GuestCount; i++) {
+                    const name = document.getElementById(`a171GuestName-${i}`)?.value?.trim();
+                    const oldPID = document.getElementById(`a171OldPID-${i}`)?.value?.trim() || '';
+                    const newPID = document.getElementById(`a171NewPID-${i}`)?.value?.trim() || '';
+                    if (name) guests.push({ oldPID, newPID, name });
+                }
+                if (guests.length === 0) {
+                    alert('⚠️ Please add at least one patron name!');
+                    return;
+                }
+                data = {
+                    agent: document.getElementById('a171Agent')?.value?.trim() || '',
+                    checkIn: document.getElementById('a171Date')?.value || '',
+                    authorizer: '',
+                    currentTime,
+                    guests
+                };
+
+            } else {
+                // Normal mode — room booking required
+                if (!state.selectedServices.has('room')) {
+                    alert('⚠️ Please select Room Booking to save data!');
+                    return;
+                }
+
+                const guests = [];
+                for (let i = 1; i <= state.guestCount; i++) {
+                    if (!document.getElementById(`guest-${i}`)) continue;
+                    const oldPID = document.getElementById(`guestOldPID-${i}`)?.value || '';
+                    const newPID = document.getElementById(`guestNewPID-${i}`)?.value || 'New';
+                    const name = document.getElementById(`guestName-${i}`)?.value;
+                    if (name) guests.push({ oldPID, newPID, name });
+
+                    const sharerForm = document.getElementById(`sharerForm-${i}`);
+                    if (sharerForm && sharerForm.style.display !== 'none') {
+                        const sharerOldPID = document.getElementById(`sharerOldPID-${i}`)?.value || '';
+                        const sharerNewPID = document.getElementById(`sharerNewPID-${i}`)?.value || 'New';
+                        const sharerName = document.getElementById(`sharerName-${i}`)?.value;
+                        if (sharerName) guests.push({ oldPID: sharerOldPID, newPID: sharerNewPID, name: sharerName });
+                    }
+                }
+
+                if (guests.length === 0) {
+                    alert('⚠️ Please add at least one guest!');
+                    return;
+                }
+
+                data = {
+                    agent: document.getElementById('agentName')?.value || '',
+                    checkIn: document.getElementById('checkIn')?.value || '',
+                    authorizer: document.getElementById('authorizer')?.value || 'Jian.Xu',
+                    currentTime,
+                    guests
+                };
+            }
+
+            showMessage('📊 Saving to Google Sheets...');
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'saveFrame';
+            document.body.appendChild(iframe);
+            iframe.src = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
+
+            setTimeout(() => {
+                try { document.body.removeChild(iframe); } catch(e) {}
+                showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
+            }, 2000);
+        }
+
+        let _msgTimer = null;
+        function showMessage(text, permanent = false) {
+            const msg = document.getElementById('successMessage');
+            msg.textContent = text;
+            msg.style.display = 'block';
+            if (_msgTimer) { clearTimeout(_msgTimer); _msgTimer = null; }
+            if (!permanent) {
+                _msgTimer = setTimeout(() => { msg.style.display = 'none'; _msgTimer = null; }, 4000);
+            }
+            // permanent = true → stays visible until goHome() clears it
+        }
+        // V2.0.19: 全局自动大写 — 所有客人姓名输入框
+        document.addEventListener('input', function(e) {
+            const el = e.target;
+            if (!el || el.tagName !== 'INPUT' || el.type === 'date' || el.type === 'number' || el.type === 'time') return;
+            const id = el.id || '';
+            const isNameField =
+                id.startsWith('guestName-') ||
+                id.startsWith('sharerName-') ||
+                id.startsWith('golfGuestName-') ||
+                id.startsWith('carName-') ||
+                id.startsWith('a171GuestName-') ||
+                id === 'busPassenger';
+            if (isNameField) {
+                const pos = el.selectionStart;
+                el.value = el.value.toUpperCase();
+                try { el.setSelectionRange(pos, pos); } catch(e) {}
+            }
+        });
+    </script>
+</body>
+</html>
