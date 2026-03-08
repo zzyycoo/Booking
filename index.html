@@ -1009,7 +1009,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.21</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.22</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -1470,7 +1470,7 @@
                 ? '<div class="tip-box">Guest name will be auto-filled from room booking</div>'
                 : '';
 
-            const agentPidHtml = isStandalone ? `
+            const agentHtml = isStandalone ? `
                 <div class="form-row">
                     <div class="form-group">
                         <label>Agent</label>
@@ -1484,35 +1484,13 @@
                             <option value="Chen Cheng Chia">
                         </datalist>
                     </div>
-                    <div class="form-group">
-                        <label>Old PID</label>
-                        <div class="pid-input-wrapper">
-                            <input type="text" id="carGuestOldPID"
-                                   class="pid-input" placeholder="Enter Old PID"
-                                   oninput="searchPID('carGuestOldPID','carGuestNewPID','carGuestNameDisplay','carPidInfo')">
-                            <span class="pid-status-icon"></span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>New PID</label>
-                        <div class="pid-input-wrapper">
-                            <input type="text" id="carGuestNewPID"
-                                   class="pid-input" value="New" placeholder="Enter New PID"
-                                   oninput="searchPID('carGuestOldPID','carGuestNewPID','carGuestNameDisplay','carPidInfo')">
-                            <span class="pid-status-icon"></span>
-                        </div>
-                        <div id="carPidInfo" class="pid-info-box"></div>
-                    </div>
-                    <div class="form-group" style="display:none;">
-                        <input type="text" id="carGuestNameDisplay">
-                    </div>
                 </div>` : '';
 
             return `
                 <div class="card">
                     <div class="section-title">🚗 Car Service Information</div>
                     ${tipHtml}
-                    ${agentPidHtml}
+                    ${agentHtml}
                     <div id="carsContainer"></div>
                     <button class="btn btn-add" onclick="addCar()">+ Add Car</button>
                 </div>
@@ -1929,90 +1907,116 @@
 
         function addCar() {
             state.carCount++;
+            const n = state.carCount;
             const container = document.getElementById('carsContainer');
-            
+            const isStandalone = !state.selectedServices.has('room');
+
             // 获取订房的入住日期作为默认日期
-            const checkInDate = document.getElementById('checkIn')?.value || '';
-            
+            const checkInDate = document.getElementById('checkIn')?.value || getTodayStr();
+
             // 自动填充客人名字（如果有订房）
             let autoFilledName = '';
-            if (state.selectedServices.has('room')) {
-                const firstGuestName = document.getElementById('guestName-1')?.value || '';
-                autoFilledName = firstGuestName;
+            if (!isStandalone) {
+                autoFilledName = document.getElementById('guestName-1')?.value || '';
             }
-            
+
+            // PID 行：仅单独模式显示
+            const pidRowHtml = isStandalone ? `
+                <div class="form-row" style="margin-bottom:0.5rem;">
+                    <div class="form-group">
+                        <label>Old PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" id="carOldPID-${n}" class="pid-input" placeholder="Enter Old PID"
+                                   oninput="searchPID('carOldPID-${n}','carNewPID-${n}','carName-${n}','carPidInfo-${n}')">
+                            <span class="pid-status-icon"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>New PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" id="carNewPID-${n}" class="pid-input" value="New" placeholder="Enter New PID"
+                                   oninput="searchPID('carOldPID-${n}','carNewPID-${n}','carName-${n}','carPidInfo-${n}')">
+                            <span class="pid-status-icon"></span>
+                        </div>
+                        <div id="carPidInfo-${n}" class="pid-info-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" id="carName-${n}" value="${autoFilledName}" placeholder="Auto-filled from PID">
+                    </div>
+                </div>` : `
+                <div class="form-row" style="margin-bottom:0.5rem;">
+                    <div class="form-group">
+                        <label>Guest Name</label>
+                        <input type="text" id="carName-${n}" value="${autoFilledName}">
+                    </div>
+                </div>`;
+
             const carDiv = document.createElement('div');
             carDiv.className = 'item-group';
-            carDiv.id = `car-${state.carCount}`;
+            carDiv.id = `car-${n}`;
             carDiv.innerHTML = `
                 <div class="item-header">
-                    <span class="item-number">Car #${state.carCount}</span>
-                    <button class="remove-btn" onclick="removeCar(${state.carCount})">Remove</button>
+                    <span class="item-number">Car #${n}</span>
+                    <button class="remove-btn" onclick="removeCar(${n})">Remove</button>
                 </div>
+                ${pidRowHtml}
                 <div class="form-row">
                     <div class="form-group">
                         <label>Car Type</label>
-                        <select id="carType-${state.carCount}">
+                        <select id="carType-${n}">
                             <option value="limo">Limo</option>
                             <option value="sedan">Sedan</option>
                             <option value="SUV">SUV</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Guest Name</label>
-                        <input type="text" id="carName-${state.carCount}" value="${autoFilledName}">
-                    </div>
-                    <div class="form-group">
                         <label>Number of Guests</label>
-                        <input type="number" id="carGuests-${state.carCount}" value="4">
+                        <input type="number" id="carGuests-${n}" value="4">
                     </div>
                     <div class="form-group">
                         <label>Phone</label>
-                        <input type="text" id="carPhone-${state.carCount}" value="0343222771">
+                        <input type="text" id="carPhone-${n}" value="0343222771">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Date</label>
-                        <input type="date" id="carDate-${state.carCount}" value="${checkInDate}">
+                        <input type="date" id="carDate-${n}" value="${checkInDate}">
                     </div>
                     <div class="form-group">
                         <label>Time</label>
-                        <input type="time" id="carTime-${state.carCount}" value="12:00">
+                        <input type="time" id="carTime-${n}" value="12:00">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Pick Up Point</label>
                         <div style="position: relative;">
-                            <input type="text" id="carPickup-${state.carCount}" placeholder="Enter location or select below" 
-                                   list="pickupLocations-${state.carCount}" class="location-input">
-                            <datalist id="pickupLocations-${state.carCount}">
+                            <input type="text" id="carPickup-${n}" placeholder="Enter location or select below"
+                                   list="pickupLocations-${n}" class="location-input">
+                            <datalist id="pickupLocations-${n}">
                                 <option value="Main Lobby">
                                 <option value="TSN Airport">
                             </datalist>
                             <div class="quick-select-buttons" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button type="button" onclick="setLocation('carPickup-${state.carCount}', 'Main Lobby')" 
-                                        class="quick-btn">Main Lobby</button>
-                                <button type="button" onclick="setLocation('carPickup-${state.carCount}', 'TSN Airport')" 
-                                        class="quick-btn">TSN Airport</button>
+                                <button type="button" onclick="setLocation('carPickup-${n}', 'Main Lobby')" class="quick-btn">Main Lobby</button>
+                                <button type="button" onclick="setLocation('carPickup-${n}', 'TSN Airport')" class="quick-btn">TSN Airport</button>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Drop Off Point</label>
                         <div style="position: relative;">
-                            <input type="text" id="carDropoff-${state.carCount}" placeholder="Enter location or select below" 
-                                   list="dropoffLocations-${state.carCount}" class="location-input">
-                            <datalist id="dropoffLocations-${state.carCount}">
+                            <input type="text" id="carDropoff-${n}" placeholder="Enter location or select below"
+                                   list="dropoffLocations-${n}" class="location-input">
+                            <datalist id="dropoffLocations-${n}">
                                 <option value="Main Lobby">
                                 <option value="TSN Airport">
                             </datalist>
                             <div class="quick-select-buttons" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button type="button" onclick="setLocation('carDropoff-${state.carCount}', 'Main Lobby')" 
-                                        class="quick-btn">Main Lobby</button>
-                                <button type="button" onclick="setLocation('carDropoff-${state.carCount}', 'TSN Airport')" 
-                                        class="quick-btn">TSN Airport</button>
+                                <button type="button" onclick="setLocation('carDropoff-${n}', 'Main Lobby')" class="quick-btn">Main Lobby</button>
+                                <button type="button" onclick="setLocation('carDropoff-${n}', 'TSN Airport')" class="quick-btn">TSN Airport</button>
                             </div>
                         </div>
                     </div>
@@ -2020,7 +2024,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Payment</label>
-                        <select id="carPayment-${state.carCount}">
+                        <select id="carPayment-${n}">
                             <option value="Free Comp (If guest enough 2000 points)">Free Comp (2000+ points)</option>
                             <option value="Guest Comp">Guest Comp</option>
                             <option value="GOA">GOA</option>
@@ -2028,7 +2032,7 @@
                     </div>
                     <div class="form-group">
                         <label>Authorizer</label>
-                        <input type="text" id="carAuthorizer-${state.carCount}" value="xujian">
+                        <input type="text" id="carAuthorizer-${n}" value="xujian">
                     </div>
                 </div>
             `;
@@ -2534,10 +2538,10 @@
                     combinedEmail = carBody;
                     // Standalone car: [Agent] PID Name Car Service Date
                     const agent = document.getElementById('carAgent')?.value?.trim() || '';
-                    const oldPID = document.getElementById('carGuestOldPID')?.value?.trim() || '';
-                    const newPID = document.getElementById('carGuestNewPID')?.value?.trim() || '';
+                    const oldPID = document.getElementById('carOldPID-1')?.value?.trim() || '';
+                    const newPID = document.getElementById('carNewPID-1')?.value?.trim() || '';
                     const pid = resolvePID(oldPID, newPID);
-                    const name = document.getElementById('carGuestNameDisplay')?.value?.trim() || document.getElementById('carName-1')?.value?.trim() || '';
+                    const name = document.getElementById('carName-1')?.value?.trim() || '';
                     const date = formatDate(document.getElementById('carDate-1')?.value);
                     if (agent && name) {
                         subject = `[${agent}] ${pid} ${name} Car Service ${date}`;
