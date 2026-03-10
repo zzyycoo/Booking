@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.22</title>
+    <title>Hotel Book Email Generator V2.0.21</title>
     <!-- 
         Hotel Book Email Generator
         Version: 2.0.21
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
-        Last Updated: 2026-03-10
+        Last Updated: 2026-03-08
         
-        Changelog V2.0.22:
+        Changelog V2.0.21:
         - Standalone Car / Golf / Bus: added Agent selector + Old/New PID fields
         - Standalone subject format: [Agent] PID Name Car Service / Golf Booking / Bus Service Date
         - PID auto-fill from database works in all standalone service forms
@@ -1009,7 +1009,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.22</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.23</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -3165,16 +3165,16 @@ ${busContent}`;
 
             showMessage('📊 Saving to Google Sheets...');
 
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'saveFrame';
-            document.body.appendChild(iframe);
-            iframe.src = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
+            const url = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
 
-            setTimeout(() => {
-                try { document.body.removeChild(iframe); } catch(e) {}
-                showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
-            }, 2000);
+            fetch(url, { method: 'GET', mode: 'no-cors' })
+                .then(() => {
+                    showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
+                })
+                .catch((err) => {
+                    console.error('Save error:', err);
+                    showMessage('❌ Save failed. Please check your connection and try again.');
+                });
         }
 
         let _msgTimer = null;
