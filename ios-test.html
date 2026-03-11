@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS Save Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 1rem; background: #f5f5f5; }
+        h2 { color: #1a4d2e; }
+        .card { background: white; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        button { width: 100%; padding: 0.875rem; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-bottom: 0.5rem; color: white; }
+        .btn-1 { background: #1a4d2e; }
+        .btn-2 { background: #2563eb; }
+        .btn-3 { background: #7c3aed; }
+        .btn-4 { background: #dc2626; }
+        .btn-5 { background: #d97706; }
+        .log { background: #1e1e1e; color: #00ff00; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; min-height: 200px; white-space: pre-wrap; word-break: break-all; }
+        .status { padding: 0.5rem 1rem; border-radius: 6px; margin: 0.5rem 0; font-weight: 600; text-align: center; }
+        .success { background: #d1fae5; color: #065f46; }
+        .fail { background: #fee2e2; color: #991b1b; }
+        .info { background: #dbeafe; color: #1e40af; }
+        input { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem; margin-bottom: 0.5rem; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <h2>🔬 iOS Save Diagnostic</h2>
+    <p style="font-size:0.85rem;color:#666;">部署到 GitHub Pages 后在 iOS Safari 打开，逐一点击测试，观察哪个方法能写入表格。</p>
+
+    <div class="card">
+        <label style="font-weight:600;font-size:0.9rem;">Apps Script URL</label>
+        <input type="text" id="scriptUrl" value="https://script.google.com/macros/s/AKfycbyOpykMzPHrhi6pcthRdASWMQdjXO0VQJilRd9R67i1_GRqtBOPBcHDD8fJrHNjY1znCg/exec">
+    </div>
+
+    <div class="card">
+        <div style="font-weight:600;margin-bottom:0.5rem;">测试数据</div>
+        <div id="testDataDisplay" style="font-size:0.8rem;color:#666;word-break:break-all;"></div>
+    </div>
+
+    <div class="card">
+        <div style="font-weight:600;margin-bottom:0.75rem;">选择测试方法：</div>
+
+        <button class="btn-1" onclick="testMethod1()">
+            方法1: iframe + encodeURIComponent (原版)
+        </button>
+
+        <button class="btn-2" onclick="testMethod2()">
+            方法2: iframe + 原始 JSON (无编码)
+        </button>
+
+        <button class="btn-3" onclick="testMethod3()">
+            方法3: Image beacon + 原始 JSON
+        </button>
+
+        <button class="btn-4" onclick="testMethod4()">
+            方法4: fetch GET + no-cors
+        </button>
+
+        <button class="btn-5" onclick="testMethod5()">
+            方法5: fetch POST + no-cors
+        </button>
+    </div>
+
+    <div class="card">
+        <div style="font-weight:600;margin-bottom:0.5rem;">📋 实时日志</div>
+        <div id="statusBox"></div>
+        <div class="log" id="logBox">等待测试...\n</div>
+    </div>
+
+    <div class="card">
+        <div style="font-weight:600;margin-bottom:0.5rem;">📏 URL 长度测试</div>
+        <button onclick="checkUrlLength()" style="background:#6b7280;padding:0.75rem;border:none;border-radius:8px;width:100%;color:white;font-size:1rem;font-weight:600;cursor:pointer;">
+            检查 URL 长度
+        </button>
+        <div id="urlLengthResult" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+    </div>
+
+    <script>
+        const TEST_DATA = {
+            agent: "TEST_iOS",
+            checkIn: "2026-03-11",
+            authorizer: "TestAuth",
+            currentTime: new Date().toTimeString().slice(0,8),
+            guests: [
+                { oldPID: "12345", newPID: "67890", name: "NGUYEN VAN TEST IOS" }
+            ]
+        };
+
+        // 显示测试数据
+        document.getElementById('testDataDisplay').textContent = JSON.stringify(TEST_DATA, null, 2);
+
+        function getUrl() {
+            return document.getElementById('scriptUrl').value.trim();
+        }
+
+        function log(msg) {
+            const box = document.getElementById('logBox');
+            const time = new Date().toTimeString().slice(0,8);
+            box.textContent += `[${time}] ${msg}\n`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function setStatus(msg, type) {
+            const box = document.getElementById('statusBox');
+            box.innerHTML = `<div class="status ${type}">${msg}</div>`;
+        }
+
+        // 方法1: iframe + encodeURIComponent（原版代码）
+        function testMethod1() {
+            log('--- 方法1: iframe + encodeURIComponent ---');
+            const url = `${getUrl()}?data=${encodeURIComponent(JSON.stringify(TEST_DATA))}`;
+            log(`URL长度: ${url.length} 字符`);
+            log(`发送请求...`);
+            setStatus('⏳ 方法1 发送中...', 'info');
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'testFrame1';
+            document.body.appendChild(iframe);
+            iframe.src = url;
+
+            iframe.onload = () => log('iframe onload 触发');
+            iframe.onerror = () => log('iframe onerror 触发');
+
+            setTimeout(() => {
+                try { document.body.removeChild(iframe); } catch(e) {}
+                log('完成，请检查表格是否有数据写入');
+                setStatus('方法1 已发送 — 请检查表格', 'info');
+            }, 3000);
+        }
+
+        // 方法2: iframe + 原始JSON（无编码）
+        function testMethod2() {
+            log('--- 方法2: iframe + 原始JSON ---');
+            const url = `${getUrl()}?data=${JSON.stringify(TEST_DATA)}`;
+            log(`URL长度: ${url.length} 字符`);
+            log(`发送请求...`);
+            setStatus('⏳ 方法2 发送中...', 'info');
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'testFrame2';
+            document.body.appendChild(iframe);
+            iframe.src = url;
+
+            iframe.onload = () => log('iframe onload 触发');
+            iframe.onerror = () => log('iframe onerror 触发');
+
+            setTimeout(() => {
+                try { document.body.removeChild(iframe); } catch(e) {}
+                log('完成，请检查表格是否有数据写入');
+                setStatus('方法2 已发送 — 请检查表格', 'info');
+            }, 3000);
+        }
+
+        // 方法3: Image beacon + 原始JSON
+        function testMethod3() {
+            log('--- 方法3: Image beacon + 原始JSON ---');
+            const url = `${getUrl()}?data=${JSON.stringify(TEST_DATA)}`;
+            log(`URL长度: ${url.length} 字符`);
+            log(`发送请求...`);
+            setStatus('⏳ 方法3 发送中...', 'info');
+
+            const img = new Image();
+            img.onload = () => log('Image onload 触发');
+            img.onerror = () => log('Image onerror 触发（正常，因为返回的不是图片）');
+            img.src = url;
+
+            setTimeout(() => {
+                log('完成，请检查表格是否有数据写入');
+                setStatus('方法3 已发送 — 请检查表格', 'info');
+            }, 3000);
+        }
+
+        // 方法4: fetch GET + no-cors
+        function testMethod4() {
+            log('--- 方法4: fetch GET + no-cors ---');
+            const url = `${getUrl()}?data=${encodeURIComponent(JSON.stringify(TEST_DATA))}`;
+            log(`URL长度: ${url.length} 字符`);
+            log(`发送请求...`);
+            setStatus('⏳ 方法4 发送中...', 'info');
+
+            fetch(url, { method: 'GET', mode: 'no-cors' })
+                .then(() => {
+                    log('fetch.then() 触发（no-cors 不代表成功）');
+                    setStatus('方法4 fetch完成 — 请检查表格', 'info');
+                })
+                .catch(err => {
+                    log(`fetch.catch() 触发: ${err.message}`);
+                    setStatus('方法4 fetch报错 — 请检查表格', 'fail');
+                });
+        }
+
+        // 方法5: fetch POST + no-cors
+        function testMethod5() {
+            log('--- 方法5: fetch POST + no-cors ---');
+            log(`数据大小: ${JSON.stringify(TEST_DATA).length} 字符`);
+            log(`发送请求...`);
+            setStatus('⏳ 方法5 发送中...', 'info');
+
+            fetch(getUrl(), {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify(TEST_DATA)
+            })
+            .then(() => {
+                log('fetch POST .then() 触发');
+                setStatus('方法5 POST完成 — 请检查表格', 'info');
+            })
+            .catch(err => {
+                log(`fetch POST .catch(): ${err.message}`);
+                setStatus('方法5 POST报错', 'fail');
+            });
+        }
+
+        // URL 长度检查
+        function checkUrlLength() {
+            const encoded = `${getUrl()}?data=${encodeURIComponent(JSON.stringify(TEST_DATA))}`;
+            const raw = `${getUrl()}?data=${JSON.stringify(TEST_DATA)}`;
+            const result = document.getElementById('urlLengthResult');
+            result.innerHTML = `
+                <div>📌 encodeURIComponent 版本: <strong>${encoded.length} 字符</strong></div>
+                <div>📌 原始 JSON 版本: <strong>${raw.length} 字符</strong></div>
+                <div style="margin-top:0.5rem;color:${encoded.length > 2000 ? 'red' : 'green'}">
+                    ${encoded.length > 2000 ? '⚠️ 超过 2000 字符，Apps Script 可能截断' : '✅ 长度正常'}
+                </div>
+            `;
+            log(`URL长度检查: encoded=${encoded.length}, raw=${raw.length}`);
+        }
+
+        log('测试页面已加载');
+        log(`设备: ${navigator.userAgent}`);
+        log(`当前页面协议: ${location.protocol}`);
+    </script>
+</body>
+</html>
