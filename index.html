@@ -1009,7 +1009,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.23</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.24</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -3097,7 +3097,7 @@ ${busContent}`;
 
         // Google Sheets保存功能
         function saveToGoogleSheets() {
-            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPRdZh0jc4EgK5cDOmDhvwRJNH2Uqpqm_yx0BmJNTMltjkJ1FgAd86DH11m6wq3rUI/exec';
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOpykMzPHrhi6pcthRdASWMQdjXO0VQJilRd9R67i1_GRqtBOPBcHDD8fJrHNjY1znCg/exec';
 
             const now = new Date();
             const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -3165,16 +3165,16 @@ ${busContent}`;
 
             showMessage('📊 Saving to Google Sheets...');
 
-            const url = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'saveFrame';
+            document.body.appendChild(iframe);
+            iframe.src = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
 
-            fetch(url, { method: 'GET', mode: 'no-cors' })
-                .then(() => {
-                    showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
-                })
-                .catch((err) => {
-                    console.error('Save error:', err);
-                    showMessage('❌ Save failed. Please check your connection and try again.');
-                });
+            setTimeout(() => {
+                try { document.body.removeChild(iframe); } catch(e) {}
+                showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
+            }, 2000);
         }
 
         let _msgTimer = null;
