@@ -1009,7 +1009,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.24</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.25</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -3165,14 +3165,13 @@ ${busContent}`;
 
             showMessage('📊 Saving to Google Sheets...');
 
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'saveFrame';
-            document.body.appendChild(iframe);
-            iframe.src = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
+            // 使用 Image beacon 方式发送请求
+            // 原因：iOS Safari 的 ITP 会拦截跨域 iframe 请求（GitHub Pages → script.google.com）
+            // Image 标签是唯一不受 ITP 限制的跨域请求方式
+            const img = new Image();
+            img.src = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
 
             setTimeout(() => {
-                try { document.body.removeChild(iframe); } catch(e) {}
                 showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
             }, 2000);
         }
