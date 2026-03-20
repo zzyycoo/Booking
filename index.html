@@ -2215,13 +2215,10 @@
                     function finishImport() {
                         state.pidDatabaseLoaded = true;
 
-                        // 更新UI - 成功状态
-                        statusEl.innerHTML = `<span style="color: #10b981; font-weight: 600;">✅ ${count.toLocaleString()} records</span>`;
+                        // 更新UI - 成功状态（无弹框，仅横幅显示）
+                        statusEl.innerHTML = `<span style="color: #10b981; font-weight: 600;">✅ ${count.toLocaleString()} records ready</span>`;
                         if (buttonEl) buttonEl.textContent = 'Re-import';
                         if (iconEl) iconEl.textContent = '✅';
-
-                        // 成功提示
-                        alert(`✅ Success! Loaded ${count.toLocaleString()} PIDs from ${file.name}`);
                     }
 
                     // 开始处理
@@ -3269,6 +3266,12 @@ ${busContent}`;
                 const pos = el.selectionStart;
                 el.value = el.value.toUpperCase();
                 try { el.setSelectionRange(pos, pos); } catch(e) {}
+            }
+        });
+    </script>
+</body>
+</html>
+ { el.setSelectionRange(pos, pos); } catch(e) {}
             }
         });
     </script>
