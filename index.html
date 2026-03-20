@@ -1009,6 +1009,8 @@
     </style>
     <!-- SheetJS library for Excel file reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
 </head>
 <body>
     <div class="container">
@@ -1026,7 +1028,7 @@
                 </span>
             </div>
             <input type="file" id="pidFileInput" accept=".xlsx,.xls" style="display: none;" onchange="handlePIDFileUpload(event)">
-            <button onclick="document.getElementById('pidFileInput').click()" style="background: var(--secondary); color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+            <button id="pidImportBtn" onclick="document.getElementById('pidFileInput').click()" style="background: var(--secondary); color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
                 Import
             </button>
         </div>
@@ -1366,7 +1368,7 @@
                 content.innerHTML += generateRoomForm();
                 setTimeout(() => {
                     addGuest();
-                    updateDateRangeDisplay();
+                    initDateRangePicker();
                 }, 100);
             }
 
@@ -1417,17 +1419,15 @@
                             </select>
                         </div>
                     </div>
-                    <!-- V2.0.22: Unified Date Range Picker -->
-                    <div class="form-row" style="display: flex; align-items: flex-end; gap: 0.75rem;">
-                        <div class="form-group" style="flex: 1; min-width: 140px;">
-                            <label style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Check In → Check Out</label>
-                            <div style="display: flex; align-items: center; gap: 0.5rem; background: white; border: 2px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem;">
-                                <input type="date" id="checkIn" value="${getTodayStr()}" onchange="updateDateRangeDisplay()" style="border: none; padding: 0; background: transparent; font-size: 0.9rem; flex: 1; min-width: 110px;">
-                                <span style="color: var(--secondary); font-size: 1rem;">→</span>
-                                <input type="date" id="checkOut" value="${getTomorrowStr()}" onchange="validateCheckOutDate(); updateDateRangeDisplay();" style="border: none; padding: 0; background: transparent; font-size: 0.9rem; flex: 1; min-width: 110px;">
-                            </div>
+                                    <!-- V2.0.22: Unified Date Range Picker -->
+                    <div class="form-row" style="align-items: flex-start;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Stay Dates</label>
+                            <input type="text" id="dateRangePicker" placeholder="Select dates..." readonly style="cursor: pointer; background: white;">
+                            <input type="hidden" id="checkIn" value="${getTodayStr()}">
+                            <input type="hidden" id="checkOut" value="${getTomorrowStr()}">
+                            <div id="dateRangeDisplay" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;"></div>
                         </div>
-                        <div id="dateRangeDisplay" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; padding-bottom: 0.5rem; white-space: nowrap;"></div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -1843,24 +1843,79 @@
         }
 
         // V2.0.22: Display date range summary
-        function updateDateRangeDisplay() {
-            const checkIn = document.getElementById('checkIn')?.value;
-            const checkOut = document.getElementById('checkOut')?.value;
-            const displayEl = document.getElementById('dateRangeDisplay');
-            if (!displayEl || !checkIn || !checkOut) {
-                if (displayEl) displayEl.textContent = '';
-                return;
+        let dateRangePicker = null;
+
+        function initDateRangePicker() {
+            const pickerEl = document.getElementById('dateRangePicker');
+            const checkInEl = document.getElementById('checkIn');
+            const checkOutEl = document.getElementById('checkOut');
+
+            if (!pickerEl || !checkInEl || !checkOutEl) return;
+
+            // Set initial display
+            updateDateRangeText(checkInEl.value, checkOutEl.value);
+
+            // Initialize Litepicker
+            if (dateRangePicker) {
+                dateRangePicker.destroy();
             }
+
+            dateRangePicker = new Litepicker({
+                element: pickerEl,
+                singleMode: false,
+                startDate: checkInEl.value,
+                endDate: checkOutEl.value,
+                minDate: new Date(),
+                format: 'DD MMM YYYY',
+                delimiter: ' → ',
+                tooltipText: {
+                    one: 'night',
+                    other: 'nights'
+                },
+                tooltipNumber: (totalDays) => {
+                    return totalDays - 1;
+                },
+                setup: (picker) => {
+                    picker.on('selected', (startDate, endDate) => {
+                        checkInEl.value = startDate.format('YYYY-MM-DD');
+                        checkOutEl.value = endDate.format('YYYY-MM-DD');
+                        updateDateRangeText(checkInEl.value, checkOutEl.value);
+                    });
+                }
+            });
+        }
+
+        function updateDateRangeText(checkIn, checkOut) {
+            const pickerEl = document.getElementById('dateRangePicker');
+            const displayEl = document.getElementById('dateRangeDisplay');
+
+            if (!checkIn || !checkOut) return;
 
             const start = new Date(checkIn + 'T00:00:00');
             const end = new Date(checkOut + 'T00:00:00');
             const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
 
-            if (nights > 0) {
+            const formatDateShort = (date) => {
+                const d = new Date(date);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return `${d.getDate()} ${months[d.getMonth()]}`;
+            };
+
+            if (pickerEl) {
+                pickerEl.value = `${formatDateShort(start)} → ${formatDateShort(end)}`;
+            }
+
+            if (displayEl && nights > 0) {
                 displayEl.textContent = `${nights} night${nights > 1 ? 's' : ''}`;
-            } else {
+            } else if (displayEl) {
                 displayEl.textContent = '';
             }
+        }
+
+        function updateDateRangeDisplay() {
+            const checkIn = document.getElementById('checkIn')?.value;
+            const checkOut = document.getElementById('checkOut')?.value;
+            updateDateRangeText(checkIn, checkOut);
         }
 
         function updatePromotionDisplay() {
@@ -2077,12 +2132,12 @@
 
             // 显示Loading状态
             const statusEl = document.getElementById('pidStatus');
-            const buttonEl = document.getElementById('importButtonText');
-            
-            statusEl.innerHTML = `
-                <span style="color: #3b82f6; font-weight: 600;">⏳ Reading Excel file...</span>
-            `;
-            buttonEl.textContent = 'Loading...';
+            const buttonEl = document.getElementById('pidImportBtn');
+            const iconEl = document.getElementById('pidStatusIcon');
+
+            statusEl.innerHTML = `<span style="color: #3b82f6; font-weight: 600;">⏳ Reading...</span>`;
+            if (buttonEl) buttonEl.textContent = '...';
+            if (iconEl) iconEl.textContent = '⏳';
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -2144,21 +2199,9 @@
                             processed++;
                         }
 
-                        // 更新进度
+                        // 更新进度 - 简化显示适配横幅
                         const progress = Math.round((processed / totalRows) * 100);
-                        const progressBar = '█'.repeat(Math.floor(progress / 5)) + '░'.repeat(20 - Math.floor(progress / 5));
-                        
-                        statusEl.innerHTML = `
-                            <div style="font-weight: 600; color: #3b82f6; margin-bottom: 0.25rem;">
-                                📥 Importing... ${progress}%
-                            </div>
-                            <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-secondary); letter-spacing: -1px;">
-                                ${progressBar}
-                            </div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                                ${processed.toLocaleString()} / ${totalRows.toLocaleString()} records
-                            </div>
-                        `;
+                        statusEl.innerHTML = `<span style="color: #3b82f6; font-weight: 600;">📥 ${progress}%</span> <span style="color: var(--text-secondary);">${processed.toLocaleString()}/${totalRows.toLocaleString()}</span>`;
 
                         // 如果还有数据，继续下一批
                         if (end < totalRows) {
@@ -2173,11 +2216,9 @@
                         state.pidDatabaseLoaded = true;
 
                         // 更新UI - 成功状态
-                        statusEl.innerHTML = `
-                            <span style="color: #10b981; font-weight: 600;">✅ Database loaded</span> 
-                            <span style="color: var(--text-secondary);">• ${count.toLocaleString()} records ready</span>
-                        `;
-                        buttonEl.textContent = 'Re-import Excel';
+                        statusEl.innerHTML = `<span style="color: #10b981; font-weight: 600;">✅ ${count.toLocaleString()} records</span>`;
+                        if (buttonEl) buttonEl.textContent = 'Re-import';
+                        if (iconEl) iconEl.textContent = '✅';
 
                         // 成功提示
                         alert(`✅ Success! Loaded ${count.toLocaleString()} PIDs from ${file.name}`);
@@ -2188,10 +2229,9 @@
 
                 } catch (error) {
                     console.error('Error reading Excel file:', error);
-                    statusEl.innerHTML = `
-                        <span style="color: #ef4444; font-weight: 600;">❌ Import failed</span>
-                    `;
-                    buttonEl.textContent = 'Import Excel';
+                    statusEl.innerHTML = `<span style="color: #ef4444; font-weight: 600;">❌ Failed</span>`;
+                    if (buttonEl) buttonEl.textContent = 'Import';
+                    if (iconEl) iconEl.textContent = '❌';
                     alert('❌ Error reading Excel file. Please make sure it\'s a valid .xlsx file.');
                 }
             };
@@ -2525,19 +2565,9 @@
             if (state.selectedServices.has('room')) {
                 const checkIn  = document.getElementById('checkIn')?.value;
                 const checkOut = document.getElementById('checkOut')?.value;
-                if (!checkIn && !checkOut) {
-                    alert('⚠️ Please fill in both Check In and Check Out dates before generating the email.');
-                    document.getElementById('checkIn').focus();
-                    return;
-                }
-                if (!checkIn) {
-                    alert('⚠️ Please fill in the Check In date before generating the email.');
-                    document.getElementById('checkIn').focus();
-                    return;
-                }
-                if (!checkOut) {
-                    alert('⚠️ Please fill in the Check Out date before generating the email.');
-                    document.getElementById('checkOut').focus();
+                if (!checkIn || !checkOut) {
+                    alert('⚠️ Please select stay dates before generating the email.');
+                    document.getElementById('dateRangePicker')?.focus();
                     return;
                 }
             }
