@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.26</title>
+    <title>Hotel Book Email Generator V2.0.27</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.27:
+        - Fixed all remaining white backgrounds in dark mode
+        - Added --tip-bg CSS variables for yellow highlight areas
+        - Fixed selection-card, guest-group, email-preview, bus-route-form backgrounds
+        - Fixed btn-sharer, quick-service-btn, btn-sharer-remove backgrounds
+        - Fixed Promotion display box and a171Card backgrounds
 
         Changelog V2.0.26:
         - Added full dark mode support (prefers-color-scheme: dark)
@@ -138,6 +145,8 @@
             --success: #28a745;
             --danger: #dc3545;
             --warning: #ffc107;
+            --tip-bg-start: #fff9e6;
+            --tip-bg-end: #fff4d6;
         }
 
         /* V2.0.25: Dark Mode - Professional */
@@ -158,6 +167,8 @@
             --success: #34c759;
             --danger: #ff3b30;
             --warning: #ffcc00;
+            --tip-bg-start: #3d3a2a;
+            --tip-bg-end: #2d2b20;
         }
 
         [data-theme="dark"] body {
@@ -407,7 +418,7 @@
         }
 
         .selection-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            background: linear-gradient(135deg, var(--card) 0%, var(--bg-gradient-start) 100%);
             border-radius: 12px;
             padding: 1.25rem 1rem;
             text-align: center;
@@ -438,7 +449,7 @@
 
         .selection-card.selected {
             border-color: var(--secondary);
-            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            background: linear-gradient(135deg, var(--tip-bg-start) 0%, var(--tip-bg-end) 100%);
             box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
         }
 
@@ -506,7 +517,7 @@
         }
 
         .guest-group, .item-group {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--card) 100%);
             padding: 1rem;
             border-radius: 10px;
             margin-bottom: 0.75rem;
@@ -721,7 +732,7 @@
         }
 
         .email-preview {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--card) 100%);
             padding: 1.5rem;
             border-radius: 10px;
             font-family: 'Courier New', monospace;
@@ -773,7 +784,7 @@
         }
 
         .tip-box {
-            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            background: linear-gradient(135deg, var(--tip-bg-start) 0%, var(--tip-bg-end) 100%);
             border-left: 3px solid var(--warning);
             padding: 0.75rem 1rem;
             border-radius: 8px;
@@ -827,7 +838,7 @@
             display: none;
             margin-top: 0.75rem;
             padding: 1rem;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--card) 100%);
             border-radius: 8px;
             border-left: 3px solid var(--secondary);
             box-shadow: var(--shadow-sm);
@@ -920,7 +931,7 @@
         }
 
         .btn-sharer:hover {
-            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            background: linear-gradient(135deg, var(--tip-bg-start) 0%, var(--tip-bg-end) 100%);
             border-color: var(--secondary);
             border-style: solid;
             transform: translateY(-2px);
@@ -928,7 +939,7 @@
         }
 
         .btn-sharer.active {
-            background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%);
+            background: linear-gradient(135deg, var(--tip-bg-start) 0%, var(--tip-bg-end) 100%);
             border-color: var(--secondary);
             border-style: solid;
             color: var(--primary);
@@ -940,7 +951,7 @@
 
         .btn-sharer-remove {
             padding: 0.375rem 0.875rem;
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            background: linear-gradient(135deg, var(--card) 0%, var(--bg-gradient-start) 100%);
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--text-secondary);
@@ -1061,7 +1072,7 @@
         /* Quick service add buttons */
         .quick-service-btn {
             padding: 0.375rem 0.875rem;
-            background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+            background: linear-gradient(135deg, var(--card) 0%, var(--bg-gradient-start) 100%);
             border: 1px dashed var(--border);
             border-radius: 6px;
             color: var(--text);
@@ -1372,11 +1383,11 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.25</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.27</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
-        <div id="pidImportBanner" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid var(--border);">
+        <div id="pidImportBanner" style="background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid var(--border);">
             <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0;">
                 <span id="pidStatusIcon" style="font-size: 1.1rem;">📊</span>
                 <span id="pidStatus" style="font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
@@ -1384,7 +1395,7 @@
                 </span>
             </div>
             <input type="file" id="pidFileInput" accept=".xlsx,.xls" style="display: none;" onchange="handlePIDFileUpload(event)">
-            <button id="pidImportBtn" onclick="document.getElementById('pidFileInput').click()" style="background: var(--secondary); color: white; border: none; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
+            <button id="pidImportBtn" onclick="document.getElementById('pidFileInput').click()" style="background: var(--secondary); color: #000000; border: none; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; white-space: nowrap; flex-shrink: 0;">
                 Import
             </button>
         </div>
@@ -1395,7 +1406,7 @@
                 <div class="section-title">Please Select Services to Book</div>
 
                 <!-- V2.0.12: ONE DAY TRIP Entry -->
-                <div id="a171Card" style="background: linear-gradient(135deg, #fff9e6 0%, #fff4d6 100%); border: 2px solid var(--secondary); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; cursor: pointer; transition: all 0.3s ease;" onclick="proceedA171()">
+                <div id="a171Card" style="background: linear-gradient(135deg, var(--tip-bg-start) 0%, var(--tip-bg-end) 100%); border: 2px solid var(--secondary); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; cursor: pointer; transition: all 0.3s ease;" onclick="proceedA171()">
                     <div>
                         <div style="font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 0.2rem;">🌅 ONE DAY TRIP — Patron Registration</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary);">Patron visit without room booking</div>
@@ -1878,7 +1889,7 @@
                     <!-- Hidden fields for default values -->
                     <input type="hidden" id="rateCode" value="CASBAR">
                     <input type="hidden" id="deposit" value="No">
-                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border-left: 3px solid var(--secondary); font-size: 0.85rem; line-height: 1.6;">
+                    <div style="background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--card) 100%); padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border-left: 3px solid var(--secondary); font-size: 0.85rem; line-height: 1.6;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                             <div><strong>Promotion:</strong> <span id="displayPromotion">-</span></div>
                         </div>
