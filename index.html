@@ -3,12 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.23</title>
+    <title>Hotel Book Email Generator V2.0.24</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.23
+        Version: 2.0.24
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.24:
+        - Added progress bar showing completion percentage
+        - Added real-time email preview
+        - Added mobile bottom action bar (2x2 grid layout)
+        - Added input mode: PID=numeric, Name=text
+        - Added validation for all required fields
 
         Changelog V2.0.23:
         - Removed default "New" value from New PID inputs
@@ -442,6 +449,25 @@
         input:disabled, select:disabled {
             background: #f8f9fa;
             cursor: not-allowed;
+        }
+
+        /* V2.0.24: Required field validation */
+        input.required-field:placeholder-shown,
+        select.required-field:invalid {
+            border-color: var(--danger);
+            background-color: #fff5f5;
+        }
+
+        input.required-field:not(:placeholder-shown),
+        select.required-field:valid {
+            border-color: var(--success);
+            background-color: #f0fff4;
+        }
+
+        .field-error {
+            color: var(--danger);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
         }
 
         .btn {
@@ -882,6 +908,152 @@
             animation: progressPulse 1.5s ease-in-out infinite;
         }
 
+        /* V2.0.24: Progress Bar */
+        .progress-bar-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            margin: -1.25rem -1.25rem 1rem -1.25rem;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary) 0%, var(--accent) 100%);
+            transition: width 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.375rem;
+            text-align: center;
+        }
+
+        /* V2.0.24: Real-time Preview */
+        .preview-panel {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 350px;
+            max-height: 70vh;
+            background: white;
+            border-radius: 12px 0 0 12px;
+            box-shadow: var(--shadow-lg);
+            z-index: 99;
+            display: none;
+            flex-direction: column;
+        }
+
+        .preview-panel.visible {
+            display: flex;
+        }
+
+        .preview-panel-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        /* V2.0.24: Mobile Bottom Action Bar */
+        .mobile-action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-action-bar {
+                display: block;
+            }
+
+            .mobile-action-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .mobile-action-btn {
+                padding: 0.75rem;
+                border: none;
+                border-radius: 8px;
+                font-size: 0.85rem;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.375rem;
+            }
+
+            .mobile-action-btn.primary {
+                background: var(--primary);
+                color: white;
+            }
+
+            .mobile-action-btn.secondary {
+                background: var(--secondary);
+                color: white;
+            }
+
+            .mobile-action-btn.success {
+                background: var(--success);
+                color: white;
+            }
+
+            .mobile-action-btn.info {
+                background: #17a2b8;
+                color: white;
+            }
+
+            /* Add padding to main content to account for fixed bottom bar */
+            body {
+                padding-bottom: 80px;
+            }
+
+            /* Hide desktop actions on mobile */
+            .desktop-actions {
+                display: none;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-action-bar {
+                display: none !important;
+            }
+        }
+
         /* Guest fields responsive grid */
         .guest-fields {
             display: grid;
@@ -1020,7 +1192,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.23</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.24</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -1085,7 +1257,7 @@
         <div id="bookingPage" class="page">
             <div class="breadcrumb" id="breadcrumb"></div>
             <div id="bookingContent"></div>
-            <div class="actions">
+            <div class="actions desktop-actions">
                 <button class="btn btn-back" onclick="goHome()">← Back to Home</button>
                 <button class="btn btn-primary" onclick="generateAllEmails()">✉️ Generate Email</button>
                 <button class="btn btn-secondary" onclick="copyAllEmails()">📋 Copy</button>
@@ -1096,6 +1268,35 @@
             <div class="card" id="previewCard" style="display: none; margin-top: 1.5rem;">
                 <div class="section-title">👀 Email Preview</div>
                 <div class="email-preview" id="emailPreview"></div>
+            </div>
+        </div>
+
+        <!-- V2.0.24: Mobile Bottom Action Bar -->
+        <div class="mobile-action-bar" id="mobileActionBar">
+            <div class="mobile-action-grid">
+                <button class="mobile-action-btn primary" onclick="generateAllEmails()">
+                    ✉️ Generate
+                </button>
+                <button class="mobile-action-btn secondary" onclick="copyAllEmails()">
+                    📋 Copy
+                </button>
+                <button class="mobile-action-btn success" onclick="sendEmail()">
+                    📨 Send
+                </button>
+                <button class="mobile-action-btn info" onclick="saveToGoogleSheets()">
+                    📊 Save
+                </button>
+            </div>
+        </div>
+
+        <!-- V2.0.24: Real-time Preview Panel (Desktop) -->
+        <div class="preview-panel" id="previewPanel">
+            <div class="preview-panel-header">
+                <span>👀 Live Preview</span>
+                <button onclick="togglePreview()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">×</button>
+            </div>
+            <div class="preview-panel-body" id="livePreviewContent">
+                Fill in the form to see preview...
             </div>
         </div>
     </div>
@@ -1372,6 +1573,16 @@
                 setTimeout(() => {
                     addGuest();
                     initDateRangePicker();
+                    updateProgressBar();
+                    // Add listeners to global fields
+                    ['agentName', 'hotelName', 'authorizer'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.addEventListener('change', updateProgressBar);
+                    });
+                    ['checkIn', 'checkOut'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.addEventListener('change', updateProgressBar);
+                    });
                 }, 100);
             }
 
@@ -1399,6 +1610,13 @@
         function generateRoomForm() {
             return `
                 <div class="card">
+                    <!-- V2.0.24: Progress Bar -->
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Complete required fields (0/5)</div>
+                    </div>
                     <div class="section-title">🛏️ Room Booking Information</div>
                     <div class="form-row">
                         <div class="form-group">
@@ -1711,7 +1929,7 @@
             state.guestCount++;
             const container = document.getElementById('guestsContainer');
             const hotel = document.getElementById('hotelName')?.value;
-            
+
             const guestDiv = document.createElement('div');
             guestDiv.className = 'guest-group';
             guestDiv.id = `guest-${state.guestCount}`;
@@ -1722,12 +1940,13 @@
                 </div>
                 <div class="guest-fields">
                     <div class="form-group">
-                        <label>Old PID</label>
+                        <label>Old PID *</label>
                         <div class="pid-input-wrapper">
-                            <input type="text" 
-                                   id="guestOldPID-${state.guestCount}" 
-                                   class="pid-input"
-                                   oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}')"
+                            <input type="text"
+                                   id="guestOldPID-${state.guestCount}"
+                                   class="pid-input required-field"
+                                   inputmode="numeric"
+                                   oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}'); updateProgressBar();"
                                    onchange="syncGuestInfoToOtherServices()"
                                    placeholder="Enter Old PID">
                             <span class="pid-status-icon" id="oldPidIcon-${state.guestCount}"></span>
@@ -1739,6 +1958,7 @@
                             <input type="text"
                                    id="guestNewPID-${state.guestCount}"
                                    class="pid-input"
+                                   inputmode="numeric"
                                    oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}')"
                                    onchange="syncGuestInfoToOtherServices()"
                                    placeholder="Enter New PID">
@@ -1747,15 +1967,17 @@
                         <div id="pidInfo-${state.guestCount}" class="pid-info-box"></div>
                     </div>
                     <div class="form-group">
-                        <label>Guest Name</label>
-                        <input type="text" 
-                               id="guestName-${state.guestCount}" 
-                               onchange="syncGuestInfoToOtherServices()"
+                        <label>Guest Name *</label>
+                        <input type="text"
+                               id="guestName-${state.guestCount}"
+                               class="required-field"
+                               oninput="updateProgressBar();"
+                               onchange="syncGuestInfoToOtherServices(); updateProgressBar();"
                                placeholder="Auto-filled from PID">
                     </div>
                     <div class="form-group">
-                        <label>Room Type</label>
-                        <select id="roomType-${state.guestCount}" onchange="updatePromotionDisplay()">
+                        <label>Room Type *</label>
+                        <select id="roomType-${state.guestCount}" class="required-field" onchange="updatePromotionDisplay(); updateProgressBar();">
                             <option value="">Please select hotel first</option>
                         </select>
                     </div>
@@ -1918,6 +2140,91 @@
             const checkIn = document.getElementById('checkIn')?.value;
             const checkOut = document.getElementById('checkOut')?.value;
             updateDateRangeText(checkIn, checkOut);
+        }
+
+        // V2.0.24: Progress Bar Update
+        function updateProgressBar() {
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            if (!progressFill || !progressText) return;
+
+            // Calculate required fields completion
+            let filled = 0;
+            let total = 0;
+
+            // Check global fields
+            const agentName = document.getElementById('agentName')?.value;
+            const hotelName = document.getElementById('hotelName')?.value;
+            const checkIn = document.getElementById('checkIn')?.value;
+            const checkOut = document.getElementById('checkOut')?.value;
+            const authorizer = document.getElementById('authorizer')?.value;
+
+            if (agentName) filled++;
+            if (hotelName) filled++;
+            if (checkIn) filled++;
+            if (checkOut) filled++;
+            if (authorizer) filled++;
+            total += 5;
+
+            // Check each guest
+            for (let i = 1; i <= state.guestCount; i++) {
+                const oldPID = document.getElementById(`guestOldPID-${i}`)?.value;
+                const guestName = document.getElementById(`guestName-${i}`)?.value;
+                const roomType = document.getElementById(`roomType-${i}`)?.value;
+
+                if (oldPID) filled++;
+                if (guestName) filled++;
+                if (roomType) filled++;
+                total += 3;
+            }
+
+            const percentage = total > 0 ? Math.round((filled / total) * 100) : 0;
+            progressFill.style.width = `${percentage}%`;
+            progressText.textContent = `Complete required fields (${filled}/${total}) - ${percentage}%`;
+
+            // Update live preview if enough fields are filled
+            if (percentage >= 50) {
+                updateLivePreview();
+            }
+        }
+
+        // V2.0.24: Live Preview Update
+        function updateLivePreview() {
+            const previewPanel = document.getElementById('previewPanel');
+            const livePreviewContent = document.getElementById('livePreviewContent');
+            if (!previewPanel || !livePreviewContent) return;
+
+            // Check if on desktop (width > 768px)
+            if (window.innerWidth > 768) {
+                previewPanel.classList.add('visible');
+            }
+
+            // Generate preview content
+            let preview = '';
+            const agentName = document.getElementById('agentName')?.value || '[Agent]';
+            const hotelName = document.getElementById('hotelName')?.value || '[Hotel]';
+            const checkIn = document.getElementById('checkIn')?.value || '[Check In]';
+            const checkOut = document.getElementById('checkOut')?.value || '[Check Out]';
+
+            preview += `Agent: ${agentName}\n`;
+            preview += `Hotel: ${hotelName}\n`;
+            preview += `Dates: ${checkIn} → ${checkOut}\n\n`;
+            preview += 'Guests:\n';
+
+            for (let i = 1; i <= state.guestCount; i++) {
+                const name = document.getElementById(`guestName-${i}`)?.value || `[Guest ${i}]`;
+                const roomType = document.getElementById(`roomType-${i}`)?.value || '[Room Type]';
+                preview += `- ${name}: ${roomType}\n`;
+            }
+
+            livePreviewContent.textContent = preview;
+        }
+
+        function togglePreview() {
+            const previewPanel = document.getElementById('previewPanel');
+            if (previewPanel) {
+                previewPanel.classList.remove('visible');
+            }
         }
 
         function updatePromotionDisplay() {
