@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.22</title>
+    <title>Hotel Book Email Generator V2.0.23</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.22
+        Version: 2.0.23
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.23:
+        - Removed default "New" value from New PID inputs
+        - Fixed stray code on homepage
 
         Changelog V2.0.22:
         - Added room type validation - require room type selection for each guest
@@ -1016,7 +1020,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.27</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.23</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -1300,7 +1304,6 @@
                             <input type="text"
                                    id="a171NewPID-${n}"
                                    class="pid-input"
-                                   value="New"
                                    placeholder="Enter New PID"
                                    oninput="searchPID('a171OldPID-${n}', 'a171NewPID-${n}', 'a171GuestName-${n}', 'a171PidInfo-${n}')">
                             <span class="pid-status-icon" id="a171NewPidIcon-${n}"></span>
@@ -1601,7 +1604,7 @@
                         <label>New PID</label>
                         <div class="pid-input-wrapper">
                             <input type="text" id="busGuestNewPID"
-                                   class="pid-input" value="New" placeholder="Enter New PID"
+                                   class="pid-input" placeholder="Enter New PID"
                                    oninput="searchPID('busGuestOldPID','busGuestNewPID','busPassenger','busPidInfo')">
                             <span class="pid-status-icon"></span>
                         </div>
@@ -1733,10 +1736,9 @@
                     <div class="form-group">
                         <label>New PID</label>
                         <div class="pid-input-wrapper">
-                            <input type="text" 
-                                   id="guestNewPID-${state.guestCount}" 
+                            <input type="text"
+                                   id="guestNewPID-${state.guestCount}"
                                    class="pid-input"
-                                   value="New"
                                    oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}')"
                                    onchange="syncGuestInfoToOtherServices()"
                                    placeholder="Enter New PID">
@@ -2013,7 +2015,7 @@
                     <div class="form-group">
                         <label>New PID</label>
                         <div class="pid-input-wrapper">
-                            <input type="text" id="carNewPID-${n}" class="pid-input" value="New" placeholder="Enter New PID"
+                            <input type="text" id="carNewPID-${n}" class="pid-input" placeholder="Enter New PID"
                                    oninput="searchPID('carOldPID-${n}','carNewPID-${n}','carName-${n}','carPidInfo-${n}')">
                             <span class="pid-status-icon"></span>
                         </div>
@@ -2462,10 +2464,9 @@
                     <div class="form-group">
                         <label>New PID</label>
                         <div class="pid-input-wrapper">
-                            <input type="text" 
-                                   id="golfGuestNewPID-${count}" 
+                            <input type="text"
+                                   id="golfGuestNewPID-${count}"
                                    class="pid-input"
-                                   value="New"
                                    placeholder="Enter New PID"
                                    oninput="searchPID('golfGuestOldPID-${count}', 'golfGuestNewPID-${count}', 'golfGuestName-${count}', 'golfPidInfo-${count}')">
                             <span class="pid-status-icon" id="golfNewPidIcon-${count}"></span>
@@ -3266,12 +3267,6 @@ ${busContent}`;
                 const pos = el.selectionStart;
                 el.value = el.value.toUpperCase();
                 try { el.setSelectionRange(pos, pos); } catch(e) {}
-            }
-        });
-    </script>
-</body>
-</html>
- { el.setSelectionRange(pos, pos); } catch(e) {}
             }
         });
     </script>
