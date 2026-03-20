@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.25</title>
+    <title>Hotel Book Email Generator V2.0.26</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.25
+        Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.26:
+        - Added full dark mode support (prefers-color-scheme: dark)
+        - Fixed input fields background and text colors in dark mode
+        - All form inputs now properly adapt to system dark mode settings
 
         Changelog V2.0.25:
         - Added dark mode toggle with system preference detection
@@ -125,6 +130,8 @@
             --text: #212529;
             --text-secondary: #6c757d;
             --border: #dee2e6;
+            --input-bg: #ffffff;
+            --input-text: #212529;
             --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
             --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
             --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
@@ -584,7 +591,8 @@
             font-size: 0.9rem;
             font-family: 'Inter', sans-serif;
             transition: all 0.2s ease;
-            background: white;
+            background: var(--input-bg, #ffffff);
+            color: var(--input-text, #212529);
         }
 
         input:focus, select:focus, textarea:focus {
@@ -755,7 +763,7 @@
             text-align: center;
             margin-bottom: 1.25rem;
             padding: 0.75rem 1rem;
-            background: white;
+            background: var(--card);
             border-radius: 8px;
             color: var(--text-secondary);
             font-size: 0.85rem;
@@ -1092,7 +1100,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: white;
+            background: var(--card);
             padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--border);
             margin: -1.25rem -1.25rem 1rem -1.25rem;
@@ -1128,7 +1136,7 @@
             transform: translateY(-50%);
             width: 350px;
             max-height: 70vh;
-            background: white;
+            background: var(--card);
             border-radius: 12px 0 0 12px;
             box-shadow: var(--shadow-lg);
             z-index: 99;
@@ -1161,7 +1169,7 @@
 
         /* V2.0.24: Mobile Action Bar (Non-fixed, inline) */
         .mobile-action-bar {
-            background: white;
+            background: var(--card);
             padding: 1rem;
             margin-top: 1rem;
             border-radius: 12px;
