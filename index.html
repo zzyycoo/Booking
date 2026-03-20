@@ -133,65 +133,122 @@
             --warning: #ffc107;
         }
 
-        /* V2.0.25: Dark Mode */
+        /* V2.0.25: Dark Mode - Professional */
         [data-theme="dark"] {
-            --primary: #2d6a4f;
-            --primary-light: #40916c;
-            --secondary: #e9c46a;
-            --accent: #f4a261;
-            --bg-gradient-start: #1a1a2e;
-            --bg-gradient-end: #16213e;
-            --card: #0f3460;
-            --text: #eaeaea;
-            --text-secondary: #a0a0a0;
-            --border: #2d4a6f;
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-            --success: #4ade80;
-            --danger: #f87171;
-            --warning: #fbbf24;
+            --primary: #34c759;
+            --primary-light: #30d158;
+            --secondary: #d4af37;
+            --accent: #c9a227;
+            --bg-gradient-start: #000000;
+            --bg-gradient-end: #1c1c1e;
+            --card: #2c2c2e;
+            --text: #ffffff;
+            --text-secondary: #8e8e93;
+            --border: #48484a;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+            --success: #34c759;
+            --danger: #ff3b30;
+            --warning: #ffcc00;
+        }
+
+        [data-theme="dark"] body {
+            background: #000000;
         }
 
         [data-theme="dark"] body::before {
-            opacity: 0.02;
+            display: none;
+        }
+
+        [data-theme="dark"] .header {
+            background: #1c1c1e;
+            border: 1px solid var(--border);
+        }
+
+        [data-theme="dark"] .card {
+            background: #1c1c1e;
+            border-color: var(--border);
         }
 
         [data-theme="dark"] input,
         [data-theme="dark"] select,
         [data-theme="dark"] textarea {
-            background: #1a1a2e;
+            background: #2c2c2e;
             color: var(--text);
             border-color: var(--border);
         }
 
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.2);
+        }
+
         [data-theme="dark"] .pid-info-box.success {
-            background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+            background: rgba(52, 199, 89, 0.15);
+            border-left-color: var(--success);
+            color: #34c759;
         }
 
         [data-theme="dark"] .pid-info-box.warning {
-            background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+            background: rgba(255, 204, 0, 0.15);
+            border-left-color: var(--warning);
+            color: #ffcc00;
         }
 
         [data-theme="dark"] .guest-group,
         [data-theme="dark"] .item-group {
-            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            background: #2c2c2e;
+            border-left-color: var(--secondary);
         }
 
         [data-theme="dark"] .selection-card {
-            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+            background: #2c2c2e;
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .selection-card:hover {
+            border-color: var(--secondary);
         }
 
         [data-theme="dark"] .selection-card.selected {
-            background: linear-gradient(135deg, #3d2914 0%, #2a1f0f 100%);
+            background: rgba(212, 175, 55, 0.15);
+            border-color: var(--secondary);
         }
 
         [data-theme="dark"] .mobile-action-bar {
-            background: #0f3460;
+            background: #1c1c1e;
+            border-color: var(--border);
         }
 
         [data-theme="dark"] .preview-panel {
-            background: #0f3460;
+            background: #1c1c1e;
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .breadcrumb {
+            background: #2c2c2e;
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .progress-bar-container {
+            background: #1c1c1e;
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .progress-bar {
+            background: #48484a;
+        }
+
+        [data-theme="dark"] #pidImportBanner {
+            background: #2c2c2e !important;
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .theme-toggle {
+            background: #2c2c2e;
+            border-color: var(--border);
         }
 
         /* Dark Mode Toggle Button */
