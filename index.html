@@ -2517,6 +2517,19 @@
                     return;
                 }
             }
+
+            // V2.0.22: 房型校验 — 有订房时必须为每位客人选择房型
+            if (state.selectedServices.has('room')) {
+                for (let i = 1; i <= state.guestCount; i++) {
+                    const roomType = document.getElementById(`roomType-${i}`)?.value;
+                    if (!roomType) {
+                        alert(`⚠️ Please select a Room Type for Guest #${i} before generating the email.`);
+                        document.getElementById(`roomType-${i}`)?.focus();
+                        return;
+                    }
+                }
+            }
+
             let combinedEmail = '';
             let subject = '';
 
