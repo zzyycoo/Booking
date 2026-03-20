@@ -878,8 +878,15 @@
 
         /* V2.0.25: Dark Mode - Readonly inputs */
         [data-theme="dark"] input[readonly] {
-            background: #3a3a3c;
-            color: var(--text);
+            background: #3a3a3c !important;
+            color: var(--text) !important;
+        }
+
+        /* V2.0.25: Dark Mode - Date range picker specifically */
+        [data-theme="dark"] #dateRangePicker {
+            background: #2c2c2e !important;
+            color: #ffffff !important;
+            border-color: #48484a !important;
         }
 
         [data-theme="dark"] input:disabled {
@@ -1841,7 +1848,7 @@
                     <div class="form-row" style="align-items: flex-start;">
                         <div class="form-group" style="flex: 1;">
                             <label>Stay Dates</label>
-                            <input type="text" id="dateRangePicker" placeholder="Select dates..." readonly style="cursor: pointer; background: white;">
+                            <input type="text" id="dateRangePicker" placeholder="Select dates..." readonly style="cursor: pointer;">
                             <input type="hidden" id="checkIn" value="${getTodayStr()}">
                             <input type="hidden" id="checkOut" value="${getTomorrowStr()}">
                             <div id="dateRangeDisplay" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;"></div>
