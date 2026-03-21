@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.29</title>
+    <title>Hotel Book Email Generator V2.0.30</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.30:
+        - Fixed required-field input backgrounds (Old PID, Guest Name, Room Type)
+        - Fixed placeholder-shown and valid states for dark mode
 
         Changelog V2.0.29:
         - Fixed .btn-back background in dark mode
@@ -632,13 +636,26 @@
         input.required-field:placeholder-shown,
         select.required-field:invalid {
             border-color: var(--danger);
-            background-color: #fff5f5;
+            background-color: rgba(220, 53, 69, 0.1);
         }
 
         input.required-field:not(:placeholder-shown),
         select.required-field:valid {
             border-color: var(--success);
-            background-color: #f0fff4;
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+
+        /* Dark mode: Required field validation */
+        [data-theme="dark"] input.required-field:placeholder-shown,
+        [data-theme="dark"] select.required-field:invalid {
+            border-color: var(--danger);
+            background-color: rgba(255, 59, 48, 0.15);
+        }
+
+        [data-theme="dark"] input.required-field:not(:placeholder-shown),
+        [data-theme="dark"] select.required-field:valid {
+            border-color: var(--success);
+            background-color: rgba(52, 199, 89, 0.15);
         }
 
         .field-error {
@@ -1424,7 +1441,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.29</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.30</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
