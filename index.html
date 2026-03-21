@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.35</title>
+    <title>Hotel Book Email Generator V2.0.36</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.36:
+        - Removed default hotel and room type selection
+        - Default room types added to quick buttons (KOTS for IC, KLOS for HIR)
+        - Old PID is no longer a required field (removed * and validation)
 
         Changelog V2.0.35:
         - Fixed generate button not working (room type promotion lookup)
@@ -1477,7 +1482,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.35</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.36</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -1619,16 +1624,6 @@
         // Initialize theme on load
         initTheme();
 
-        // V2.0.33: Default hotel selection (IC) - runs after page fully loads
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const hotelInput = document.getElementById('hotelName');
-                if (hotelInput && !hotelInput.value) {
-                    setHotel('IC');
-                }
-            }, 200);
-        });
-
         const state = {
             selectedServices: new Set(),
             guestCount: 0,
@@ -1669,15 +1664,13 @@
             ]
         };
 
-        // V2.0.32: Quick room type buttons configuration
+        // V2.0.36: Quick room type buttons configuration (default included)
         const quickRoomTypes = {
             IC: {
-                default: 'KOTS',
-                quick: ['KVUS', 'TVUS', 'TOTS']
+                quick: ['KOTS', 'KVUS', 'TVUS', 'TOTS']
             },
             HIR: {
-                default: 'KLOS',
-                quick: ['TVUS', 'KLON', 'TSTS']
+                quick: ['KLOS', 'TVUS', 'KLON', 'TSTS']
             }
         };
 
@@ -2267,12 +2260,6 @@
                 if (currentValue === type) btn.classList.add('active');
                 container.appendChild(btn);
             });
-
-            // Set default if no value selected
-            const roomTypeInput = document.getElementById(`roomType-${guestIndex}`);
-            if (roomTypeInput && !roomTypeInput.value && config.default) {
-                setRoomType(guestIndex, config.default);
-            }
         }
 
         // V2.0.32: Set room type for a guest
@@ -2335,11 +2322,11 @@
                 </div>
                 <div class="guest-fields">
                     <div class="form-group">
-                        <label>Old PID *</label>
+                        <label>Old PID</label>
                         <div class="pid-input-wrapper">
                             <input type="text"
                                    id="guestOldPID-${state.guestCount}"
-                                   class="pid-input required-field"
+                                   class="pid-input"
                                    inputmode="numeric"
                                    oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}'); updateProgressBar();"
                                    onchange="syncGuestInfoToOtherServices()"
