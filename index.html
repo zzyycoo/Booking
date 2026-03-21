@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.28</title>
+    <title>Hotel Book Email Generator V2.0.29</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.29:
+        - Fixed .btn-back background in dark mode
+        - Fixed .success-message background and text color in dark mode
+        - Fixed .mobile-action-btn.info background in dark mode
 
         Changelog V2.0.28:
         - Fixed PID input box background in dark mode (pid-found, pid-not-found states)
@@ -705,13 +710,18 @@
         }
 
         .btn-back {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            background: linear-gradient(135deg, var(--text-secondary) 0%, var(--border) 100%);
             color: white;
         }
 
         .btn-back:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
+        }
+
+        [data-theme="dark"] .btn-back {
+            background: linear-gradient(135deg, #48484a 0%, #3a3a3c 100%);
+            color: white;
         }
 
         .btn-add {
@@ -752,8 +762,8 @@
         }
 
         .success-message {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(40, 167, 69, 0.25) 100%);
+            color: var(--success);
             padding: 1rem 1.5rem;
             border-radius: 10px;
             margin-top: 1rem;
@@ -763,6 +773,11 @@
             font-weight: 500;
             box-shadow: var(--shadow-sm);
             animation: slideDown 0.3s ease-out;
+        }
+
+        [data-theme="dark"] .success-message {
+            background: linear-gradient(135deg, rgba(52, 199, 89, 0.2) 0%, rgba(52, 199, 89, 0.3) 100%);
+            color: #34c759;
         }
 
         @keyframes slideDown {
@@ -1248,6 +1263,11 @@
             color: white;
         }
 
+        [data-theme="dark"] .mobile-action-btn.info {
+            background: #0a84ff;
+            color: white;
+        }
+
         @media (max-width: 768px) {
             /* Hide desktop actions on mobile */
             .desktop-actions {
@@ -1404,7 +1424,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.28</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.29</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
