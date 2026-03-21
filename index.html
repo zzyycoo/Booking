@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.40</title>
+    <title>Hotel Book Email Generator V2.0.41</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.41:
+        - Fixed email generation when guest #1 is deleted but other guests remain
+        - Room type validation now skips deleted guests
 
         Changelog V2.0.40:
         - Fixed email generation after deleting guest #1
@@ -1497,7 +1501,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.40</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.41</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -3294,9 +3298,11 @@
                 }
             }
 
-            // V2.0.22: 房型校验 — 有订房时必须为每位客人选择房型
+            // V2.0.41: 房型校验 — 有订房时必须为每位现存客人选择房型
             if (state.selectedServices.has('room')) {
                 for (let i = 1; i <= state.guestCount; i++) {
+                    // Skip deleted guests
+                    if (!document.getElementById(`guest-${i}`)) continue;
                     const roomType = document.getElementById(`roomType-${i}`)?.value;
                     if (!roomType) {
                         alert(`⚠️ Please select a Room Type for Guest #${i} before generating the email.`);
