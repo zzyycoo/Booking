@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.46</title>
+    <title>Hotel Book Email Generator V2.0.47</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.47:
+        - Streamlined UI: removed redundant labels
+        - Agent section: label removed, placeholder shows "Agent"
+        - Guest fields: removed Old PID/New PID/Guest Name/Room Type labels
+        - Hotel buttons combined with Agent row for compact layout
 
         Changelog V2.0.46:
         - Shortened Agent input field, added quick select buttons
@@ -1524,7 +1530,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.46</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.47</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -2010,10 +2016,9 @@
                         <div class="progress-text" id="progressText">Complete required fields (0/5)</div>
                     </div>
                     <div class="section-title">🛏️ Room Booking Information</div>
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 0 0 200px;">
-                            <label>Agent</label>
-                            <input list="agentList" id="agentName" placeholder="Select or type" onclick="this.select()" style="width: 100%;">
+                    <div class="form-row" style="align-items: flex-end;">
+                        <div class="form-group" style="flex: 0 0 150px; margin-bottom: 0;">
+                            <input list="agentList" id="agentName" placeholder="Agent" onclick="this.select()" style="width: 100%;">
                             <datalist id="agentList">
                                 <option value="IM">
                                 <option value="A03 Tun Naing">
@@ -2023,8 +2028,7 @@
                                 <option value="Chen Cheng Chia">
                             </datalist>
                         </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label>Quick Select</label>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
                             <div class="quick-select-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" onclick="setAgent('IM')" class="quick-btn" id="agentBtn-IM">IM</button>
                                 <button type="button" onclick="setAgent('A03')" class="quick-btn" id="agentBtn-A03">A03</button>
@@ -2035,11 +2039,7 @@
                                 <button type="button" onclick="setAgent('A173')" class="quick-btn" id="agentBtn-A173">A173</button>
                             </div>
                         </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label>Hotel</label>
-                            <input type="hidden" id="hotelName" value="">
+                        <div class="form-group" style="flex: 0 0 auto; margin-bottom: 0;">
                             <div class="quick-select-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" onclick="setHotel('IC')" class="quick-btn" id="hotelBtn-IC">IC</button>
                                 <button type="button" onclick="setHotel('HIR')" class="quick-btn" id="hotelBtn-HIR">HIR</button>
@@ -2396,8 +2396,7 @@
                     <button class="remove-btn" onclick="removeGuest(${state.guestCount})">Remove</button>
                 </div>
                 <div class="guest-fields">
-                    <div class="form-group">
-                        <label>Old PID</label>
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
                         <div class="pid-input-wrapper">
                             <input type="text"
                                    id="guestOldPID-${state.guestCount}"
@@ -2405,12 +2404,11 @@
                                    inputmode="numeric"
                                    oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}'); updateProgressBar();"
                                    onchange="syncGuestInfoToOtherServices()"
-                                   placeholder="Enter Old PID">
+                                   placeholder="Old PID">
                             <span class="pid-status-icon" id="oldPidIcon-${state.guestCount}"></span>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>New PID</label>
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
                         <div class="pid-input-wrapper">
                             <input type="text"
                                    id="guestNewPID-${state.guestCount}"
@@ -2418,28 +2416,26 @@
                                    inputmode="numeric"
                                    oninput="searchPID('guestOldPID-${state.guestCount}', 'guestNewPID-${state.guestCount}', 'guestName-${state.guestCount}', 'pidInfo-${state.guestCount}')"
                                    onchange="syncGuestInfoToOtherServices()"
-                                   placeholder="Enter New PID">
+                                   placeholder="New PID">
                             <span class="pid-status-icon" id="newPidIcon-${state.guestCount}"></span>
                         </div>
                         <div id="pidInfo-${state.guestCount}" class="pid-info-box"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Guest Name *</label>
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
                         <input type="text"
                                id="guestName-${state.guestCount}"
                                class="required-field"
                                oninput="updateProgressBar();"
                                onchange="syncGuestInfoToOtherServices(); updateProgressBar();"
-                               placeholder="Auto-filled from PID">
+                               placeholder="Guest Name *">
                     </div>
-                    <div class="form-group">
-                        <label>Room Type *</label>
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
                         <input type="hidden" id="roomType-${state.guestCount}" class="required-field">
                         <div class="quick-roomtype-buttons" id="roomTypeButtons-${state.guestCount}" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                             <!-- Room type buttons will be generated here -->
                         </div>
-                        <select id="roomTypeSelect-${state.guestCount}" class="required-field" onchange="setRoomTypeFromSelect(${state.guestCount}, this.value); updatePromotionDisplay(); updateProgressBar();" style="margin-top: 0.5rem;">
-                            <option value="">More room types...</option>
+                        <select id="roomTypeSelect-${state.guestCount}" class="required-field" onchange="setRoomTypeFromSelect(${state.guestCount}, this.value); updatePromotionDisplay(); updateProgressBar();">
+                            <option value="">Room Type *</option>
                         </select>
                     </div>
                 </div>
