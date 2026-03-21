@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.27</title>
+    <title>Hotel Book Email Generator V2.0.28</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.28:
+        - Fixed PID input box background in dark mode (pid-found, pid-not-found states)
+        - Fixed Add Sharer button background in dark mode
+        - Fixed btn-sharer-remove hover state colors
+        - Changed hardcoded colors to rgba() with dark mode overrides
 
         Changelog V2.0.27:
         - Fixed all remaining white backgrounds in dark mode
@@ -919,7 +925,7 @@
             align-items: center;
             gap: 0.375rem;
             padding: 0.5rem 1rem;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             border: 2px dashed var(--border);
             border-radius: 8px;
             color: var(--text);
@@ -963,7 +969,7 @@
         }
 
         .btn-sharer-remove:hover {
-            background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+            background: linear-gradient(135deg, rgba(255, 59, 48, 0.15) 0%, rgba(255, 59, 48, 0.25) 100%);
             border-color: var(--danger);
             color: var(--danger);
         }
@@ -1026,16 +1032,31 @@
 
         .pid-found {
             border-color: #10b981 !important;
-            background-color: #f0fdf4 !important;
+            background-color: rgba(16, 185, 129, 0.15) !important;
         }
 
         .pid-not-found {
             border-color: #f59e0b !important;
-            background-color: #fffbeb !important;
+            background-color: rgba(245, 158, 11, 0.15) !important;
         }
 
         .pid-searching {
             border-color: #3b82f6 !important;
+        }
+
+        /* Dark Mode: PID input states */
+        [data-theme="dark"] .pid-found {
+            border-color: #34c759 !important;
+            background-color: rgba(52, 199, 89, 0.2) !important;
+        }
+
+        [data-theme="dark"] .pid-not-found {
+            border-color: #ffcc00 !important;
+            background-color: rgba(255, 204, 0, 0.2) !important;
+        }
+
+        [data-theme="dark"] .pid-searching {
+            border-color: #0a84ff !important;
         }
 
         .pid-info-box {
@@ -1383,7 +1404,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.27</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.28</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
