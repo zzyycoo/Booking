@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.31</title>
+    <title>Hotel Book Email Generator V2.0.32</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.32:
+        - Default hotel set to IC
+        - Room type changed from dropdown to quick buttons
+        - IC default room type: KOTS, quick options: KVUS, TVUS, TOTS
+        - HIR default room type: KLOS, quick options: TVUS, KLON, TSTS
 
         Changelog V2.0.31:
         - Changed Hotel selection from dropdown to quick buttons (IC/HIR)
@@ -1458,7 +1464,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.31</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.32</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -1600,6 +1606,13 @@
         // Initialize theme on load
         initTheme();
 
+        // V2.0.32: Default hotel selection (IC)
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                setHotel('IC');
+            }, 100);
+        });
+
         const state = {
             selectedServices: new Set(),
             guestCount: 0,
@@ -1638,6 +1651,18 @@
                 { types: ['XEXS', 'XEXN', 'XOTS', 'XOTN', 'XVUS', 'XVUN'], promotion: 3188 },
                 { types: ['XFTS', 'XFTN', 'XLOS', 'XLON'], promotion: 3888 }
             ]
+        };
+
+        // V2.0.32: Quick room type buttons configuration
+        const quickRoomTypes = {
+            IC: {
+                default: 'KOTS',
+                quick: ['KVUS', 'TVUS', 'TOTS']
+            },
+            HIR: {
+                default: 'KLOS',
+                quick: ['TVUS', 'KLON', 'TSTS']
+            }
         };
 
         function formatDate(dateStr) {
@@ -2200,12 +2225,56 @@
             if (!hotel) return;
 
             for (let i = 1; i <= state.guestCount; i++) {
-                const select = document.getElementById(`roomType-${i}`);
-                if (select) updateRoomTypeSelect(select, hotel);
+                const container = document.getElementById(`roomTypeButtons-${i}`);
+                if (container) updateRoomTypeButtons(container, hotel, i);
+            }
+        }
+
+        // V2.0.32: Generate room type quick buttons
+        function updateRoomTypeButtons(container, hotel, guestIndex) {
+            container.innerHTML = '';
+            if (!hotel || !quickRoomTypes[hotel]) return;
+
+            const config = quickRoomTypes[hotel];
+            const currentValue = document.getElementById(`roomType-${guestIndex}`)?.value;
+
+            // Generate quick buttons
+            config.quick.forEach(type => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'quick-btn';
+                btn.textContent = type;
+                btn.onclick = () => setRoomType(guestIndex, type);
+                if (currentValue === type) btn.classList.add('active');
+                container.appendChild(btn);
+            });
+
+            // Set default if no value selected
+            const roomTypeInput = document.getElementById(`roomType-${guestIndex}`);
+            if (roomTypeInput && !roomTypeInput.value && config.default) {
+                setRoomType(guestIndex, config.default);
+            }
+        }
+
+        // V2.0.32: Set room type for a guest
+        function setRoomType(guestIndex, type) {
+            const input = document.getElementById(`roomType-${guestIndex}`);
+            if (input) {
+                input.value = type;
+                updatePromotionDisplay();
+                updateProgressBar();
+            }
+            // Update button active states
+            const container = document.getElementById(`roomTypeButtons-${guestIndex}`);
+            if (container) {
+                container.querySelectorAll('.quick-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent === type);
+                });
             }
         }
 
         function updateRoomTypeSelect(selectElement, hotel) {
+            // Legacy function - kept for compatibility
             selectElement.innerHTML = '<option value="">Please Select Room Type</option>';
             if (!hotel || !roomTypes[hotel]) return;
 
@@ -2275,9 +2344,10 @@
                     </div>
                     <div class="form-group">
                         <label>Room Type *</label>
-                        <select id="roomType-${state.guestCount}" class="required-field" onchange="updatePromotionDisplay(); updateProgressBar();">
-                            <option value="">Please select hotel first</option>
-                        </select>
+                        <input type="hidden" id="roomType-${state.guestCount}" class="required-field">
+                        <div class="quick-roomtype-buttons" id="roomTypeButtons-${state.guestCount}" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                            <!-- Room type buttons will be generated here -->
+                        </div>
                     </div>
                 </div>
                 <div id="sharerSection-${state.guestCount}" style="margin-top: 0.5rem;">
