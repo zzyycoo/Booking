@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.33</title>
+    <title>Hotel Book Email Generator V2.0.34</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.34:
+        - Fixed room type options not showing when adding new guest
+        - Added initialization of room type buttons for newly added guests
 
         Changelog V2.0.33:
         - Fixed default IC hotel selection on page load
@@ -1469,7 +1473,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.33</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.34</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -2417,9 +2421,12 @@
             `;
             container.appendChild(guestDiv);
 
+            // V2.0.34: Initialize room type buttons and dropdown for new guest
             if (hotel) {
-                const select = document.getElementById(`roomType-${state.guestCount}`);
-                updateRoomTypeSelect(select, hotel);
+                const buttonsContainer = document.getElementById(`roomTypeButtons-${state.guestCount}`);
+                const select = document.getElementById(`roomTypeSelect-${state.guestCount}`);
+                if (buttonsContainer) updateRoomTypeButtons(buttonsContainer, hotel, state.guestCount);
+                if (select) updateRoomTypeSelect(select, hotel);
             }
         }
 
