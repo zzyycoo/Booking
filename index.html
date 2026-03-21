@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.37</title>
+    <title>Hotel Book Email Generator V2.0.38</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.38:
+        - Allow past dates for check-in (for back-dated bookings)
 
         Changelog V2.0.37:
         - Fixed date picker: cannot select today or past dates for check-in
@@ -1486,7 +1489,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.37</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.38</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -2477,16 +2480,12 @@
                 dateRangePicker.destroy();
             }
 
-            // V2.0.37: minDate set to tomorrow (cannot book today or past dates)
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-
+            // V2.0.38: Allow past dates for check-in (for back-dated bookings)
             dateRangePicker = new Litepicker({
                 element: pickerEl,
                 singleMode: false,
                 startDate: checkInEl.value,
                 endDate: checkOutEl.value,
-                minDate: tomorrow,
                 format: 'DD MMM YYYY',
                 delimiter: ' → ',
                 tooltipText: {
