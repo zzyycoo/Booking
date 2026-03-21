@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.32</title>
+    <title>Hotel Book Email Generator V2.0.33</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.33:
+        - Fixed default IC hotel selection on page load
+        - Added dropdown menu for more room type options
+        - Quick buttons + dropdown now work together
 
         Changelog V2.0.32:
         - Default hotel set to IC
@@ -1464,7 +1469,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.32</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.33</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -1606,11 +1611,14 @@
         // Initialize theme on load
         initTheme();
 
-        // V2.0.32: Default hotel selection (IC)
-        document.addEventListener('DOMContentLoaded', () => {
+        // V2.0.33: Default hotel selection (IC) - runs after page fully loads
+        window.addEventListener('load', () => {
             setTimeout(() => {
-                setHotel('IC');
-            }, 100);
+                const hotelInput = document.getElementById('hotelName');
+                if (hotelInput && !hotelInput.value) {
+                    setHotel('IC');
+                }
+            }, 200);
         });
 
         const state = {
@@ -2227,6 +2235,9 @@
             for (let i = 1; i <= state.guestCount; i++) {
                 const container = document.getElementById(`roomTypeButtons-${i}`);
                 if (container) updateRoomTypeButtons(container, hotel, i);
+                // Update dropdown
+                const select = document.getElementById(`roomTypeSelect-${i}`);
+                if (select) updateRoomTypeSelect(select, hotel);
             }
         }
 
@@ -2271,6 +2282,15 @@
                     btn.classList.toggle('active', btn.textContent === type);
                 });
             }
+            // Update dropdown selection
+            const select = document.getElementById(`roomTypeSelect-${guestIndex}`);
+            if (select) select.value = type;
+        }
+
+        // V2.0.33: Handle room type selection from dropdown
+        function setRoomTypeFromSelect(guestIndex, type) {
+            if (!type) return;
+            setRoomType(guestIndex, type);
         }
 
         function updateRoomTypeSelect(selectElement, hotel) {
@@ -2345,9 +2365,12 @@
                     <div class="form-group">
                         <label>Room Type *</label>
                         <input type="hidden" id="roomType-${state.guestCount}" class="required-field">
-                        <div class="quick-roomtype-buttons" id="roomTypeButtons-${state.guestCount}" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                        <div class="quick-roomtype-buttons" id="roomTypeButtons-${state.guestCount}" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                             <!-- Room type buttons will be generated here -->
                         </div>
+                        <select id="roomTypeSelect-${state.guestCount}" class="required-field" onchange="setRoomTypeFromSelect(${state.guestCount}, this.value); updatePromotionDisplay(); updateProgressBar();" style="margin-top: 0.5rem;">
+                            <option value="">More room types...</option>
+                        </select>
                     </div>
                 </div>
                 <div id="sharerSection-${state.guestCount}" style="margin-top: 0.5rem;">
