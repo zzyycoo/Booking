@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.34</title>
+    <title>Hotel Book Email Generator V2.0.35</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.35:
+        - Fixed generate button not working (room type promotion lookup)
+        - Changed from select.options to roomTypes data object
 
         Changelog V2.0.34:
         - Fixed room type options not showing when adding new guest
@@ -1473,7 +1477,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.34</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.35</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -3570,11 +3574,17 @@ ${names.join('\n')}`;
                     guestLines.push(guestLine);
                     roomLines.push(`${name} - ${roomType}`);
                     
-                    // 收集积分
-                    const roomSelect = document.getElementById(`roomType-${i}`);
-                    const promo = roomSelect?.options[roomSelect.selectedIndex]?.dataset?.promotion;
-                    if (promo && !promotions.includes(promo)) {
-                        promotions.push(promo);
+                    // 收集积分 (V2.0.35: Fixed to work with new room type system)
+                    const hotelTypes = roomTypes[hotel];
+                    if (hotelTypes) {
+                        for (const group of hotelTypes) {
+                            if (group.types.includes(roomType)) {
+                                if (!promotions.includes(group.promotion)) {
+                                    promotions.push(group.promotion);
+                                }
+                                break;
+                            }
+                        }
                     }
                 }
             }
