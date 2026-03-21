@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.38</title>
+    <title>Hotel Book Email Generator V2.0.39</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.39:
+        - Fixed email generation after deleting guest #1 (find first existing guest)
+        - Sharer form now always visible (no need to click Add Sharer button)
 
         Changelog V2.0.38:
         - Allow past dates for check-in (for back-dated bookings)
@@ -1489,7 +1493,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.38</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.39</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -2380,7 +2384,7 @@
                         <span class="sharer-icon">👥</span> Add Sharer
                     </button>
                 </div>
-                <div id="sharerForm-${state.guestCount}" style="display: none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e9ecef;">
+                <div id="sharerForm-${state.guestCount}" style="display: block; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
                     <div class="sharer-fields">
                         <div class="form-group">
                             <label>Sharer Old PID</label>
@@ -3540,10 +3544,18 @@ ${names.join('\n')}`;
             let roomLines = [];
             let promotions = [];
             
-            // 获取第一位客人的PID（V2.0.7: 智能选择）
-            let firstGuestOldPID = document.getElementById('guestOldPID-1')?.value?.trim() || '';
-            let firstGuestNewPID = document.getElementById('guestNewPID-1')?.value?.trim() || '';
-            let firstGuestName = document.getElementById('guestName-1')?.value?.trim() || '';
+            // V2.0.39: Find first existing guest (handle deleted guests)
+            let firstGuestOldPID = '';
+            let firstGuestNewPID = '';
+            let firstGuestName = '';
+            
+            for (let i = 1; i <= state.guestCount; i++) {
+                if (!document.getElementById(`guest-${i}`)) continue;
+                firstGuestOldPID = document.getElementById(`guestOldPID-${i}`)?.value?.trim() || '';
+                firstGuestNewPID = document.getElementById(`guestNewPID-${i}`)?.value?.trim() || '';
+                firstGuestName = document.getElementById(`guestName-${i}`)?.value?.trim() || '';
+                break; // Found first guest
+            }
             
             // 智能PID：有新ID用新ID，只有旧ID用旧ID，都没有用"New"
             const displayPID = resolvePID(firstGuestOldPID, firstGuestNewPID);
