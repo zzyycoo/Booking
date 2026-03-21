@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.39</title>
+    <title>Hotel Book Email Generator V2.0.40</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.40:
+        - Fixed email generation after deleting guest #1
+        - Multiple sharers support: click "Add Sharer" multiple times to add 2nd, 3rd, etc.
 
         Changelog V2.0.39:
         - Fixed email generation after deleting guest #1 (find first existing guest)
@@ -1493,7 +1497,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.39</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.40</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -1644,6 +1648,8 @@
                 hcmToHt: false,
                 htToHcm: false
             },
+            // V2.0.40: Track sharer count per guest
+            sharerCount: {}, // Map<guestId, count>
             // V2.0: PID Database - 支持新旧PID双向查询
             pidDatabase: new Map(), // Map<PID, {oldPID, newPID, name}>
             oldPIDIndex: new Map(), // Map<OldPID, PID> for quick lookup
@@ -2380,45 +2386,12 @@
                     </div>
                 </div>
                 <div id="sharerSection-${state.guestCount}" style="margin-top: 0.5rem;">
-                    <button class="btn-sharer" onclick="toggleSharer(${state.guestCount})" type="button">
+                    <button class="btn-sharer" onclick="addSharer(${state.guestCount})" type="button">
                         <span class="sharer-icon">👥</span> Add Sharer
                     </button>
                 </div>
-                <div id="sharerForm-${state.guestCount}" style="display: block; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
-                    <div class="sharer-fields">
-                        <div class="form-group">
-                            <label>Sharer Old PID</label>
-                            <div class="pid-input-wrapper">
-                                <input type="text" 
-                                       id="sharerOldPID-${state.guestCount}" 
-                                       class="pid-input"
-                                       placeholder="Enter Old PID"
-                                       oninput="searchPID('sharerOldPID-${state.guestCount}', 'sharerNewPID-${state.guestCount}', 'sharerName-${state.guestCount}', 'sharerPidInfo-${state.guestCount}')">
-                                <span class="pid-status-icon" id="sharerOldPidIcon-${state.guestCount}"></span>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Sharer New PID</label>
-                            <div class="pid-input-wrapper">
-                                <input type="text" 
-                                       id="sharerNewPID-${state.guestCount}" 
-                                       class="pid-input"
-                                       placeholder="Enter New PID"
-                                       oninput="searchPID('sharerOldPID-${state.guestCount}', 'sharerNewPID-${state.guestCount}', 'sharerName-${state.guestCount}', 'sharerPidInfo-${state.guestCount}')">
-                                <span class="pid-status-icon" id="sharerNewPidIcon-${state.guestCount}"></span>
-                            </div>
-                            <div id="sharerPidInfo-${state.guestCount}" class="pid-info-box"></div>
-                        </div>
-                        <div class="form-group">
-                            <label>Sharer Name</label>
-                            <input type="text" 
-                                   id="sharerName-${state.guestCount}" 
-                                   placeholder="Auto-filled from PID">
-                        </div>
-                    </div>
-                    <button class="btn-sharer-remove" onclick="removeSharer(${state.guestCount})" type="button">
-                        Remove Sharer
-                    </button>
+                <div id="sharerContainer-${state.guestCount}" style="margin-top: 0.75rem;">
+                    <!-- Sharer forms will be added here dynamically -->
                 </div>
             `;
             container.appendChild(guestDiv);
@@ -2638,35 +2611,69 @@
             }
         }
 
-        function toggleSharer(guestId) {
-            const sharerForm = document.getElementById(`sharerForm-${guestId}`);
-            const sharerSection = document.getElementById(`sharerSection-${guestId}`);
-            
-            if (sharerForm.style.display === 'none') {
-                sharerForm.style.display = 'block';
-                sharerSection.querySelector('.btn-sharer').innerHTML = '<span class="sharer-icon">👥</span> Sharer Added';
-                sharerSection.querySelector('.btn-sharer').classList.add('active');
+        // V2.0.40: Add a new sharer form for a guest
+        function addSharer(guestId) {
+            if (!state.sharerCount[guestId]) {
+                state.sharerCount[guestId] = 0;
             }
+            state.sharerCount[guestId]++;
+            const sharerIndex = state.sharerCount[guestId];
+            
+            const container = document.getElementById(`sharerContainer-${guestId}`);
+            if (!container) return;
+            
+            const sharerDiv = document.createElement('div');
+            sharerDiv.className = 'sharer-form';
+            sharerDiv.id = `sharer-${guestId}-${sharerIndex}`;
+            sharerDiv.style.cssText = 'margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);';
+            sharerDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span style="font-weight: 600; color: var(--primary);">Sharer #${sharerIndex}</span>
+                </div>
+                <div class="sharer-fields">
+                    <div class="form-group">
+                        <label>Sharer Old PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" 
+                                   id="sharerOldPID-${guestId}-${sharerIndex}" 
+                                   class="pid-input"
+                                   placeholder="Enter Old PID"
+                                   oninput="searchPID('sharerOldPID-${guestId}-${sharerIndex}', 'sharerNewPID-${guestId}-${sharerIndex}', 'sharerName-${guestId}-${sharerIndex}', 'sharerPidInfo-${guestId}-${sharerIndex}')">
+                            <span class="pid-status-icon" id="sharerOldPidIcon-${guestId}-${sharerIndex}"></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Sharer New PID</label>
+                        <div class="pid-input-wrapper">
+                            <input type="text" 
+                                   id="sharerNewPID-${guestId}-${sharerIndex}" 
+                                   class="pid-input"
+                                   placeholder="Enter New PID"
+                                   oninput="searchPID('sharerOldPID-${guestId}-${sharerIndex}', 'sharerNewPID-${guestId}-${sharerIndex}', 'sharerName-${guestId}-${sharerIndex}', 'sharerPidInfo-${guestId}-${sharerIndex}')">
+                            <span class="pid-status-icon" id="sharerNewPidIcon-${guestId}-${sharerIndex}"></span>
+                        </div>
+                        <div id="sharerPidInfo-${guestId}-${sharerIndex}" class="pid-info-box"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Sharer Name</label>
+                        <input type="text" 
+                               id="sharerName-${guestId}-${sharerIndex}" 
+                               placeholder="Auto-filled from PID">
+                    </div>
+                </div>
+                <button class="btn-sharer-remove" onclick="removeSharer(${guestId}, ${sharerIndex})" type="button">
+                    Remove Sharer #${sharerIndex}
+                </button>
+            `;
+            container.appendChild(sharerDiv);
         }
 
-        function removeSharer(guestId) {
-            const sharerForm = document.getElementById(`sharerForm-${guestId}`);
-            const sharerSection = document.getElementById(`sharerSection-${guestId}`);
-            const sharerOldPIDInput = document.getElementById(`sharerOldPID-${guestId}`);
-            const sharerNewPIDInput = document.getElementById(`sharerNewPID-${guestId}`);
-            const sharerNameInput = document.getElementById(`sharerName-${guestId}`);
-            
-            // Clear inputs
-            if (sharerOldPIDInput) sharerOldPIDInput.value = '';
-            if (sharerNewPIDInput) sharerNewPIDInput.value = '';
-            if (sharerNameInput) sharerNameInput.value = '';
-            
-            // Hide form
-            sharerForm.style.display = 'none';
-            
-            // Reset button
-            sharerSection.querySelector('.btn-sharer').innerHTML = '<span class="sharer-icon">👥</span> Add Sharer';
-            sharerSection.querySelector('.btn-sharer').classList.remove('active');
+        // V2.0.40: Remove a specific sharer
+        function removeSharer(guestId, sharerIndex) {
+            const sharerDiv = document.getElementById(`sharer-${guestId}-${sharerIndex}`);
+            if (sharerDiv) {
+                sharerDiv.remove();
+            }
         }
 
         function syncGuestInfoToOtherServices() {
@@ -3565,18 +3572,23 @@ ${names.join('\n')}`;
                 const oldPID = document.getElementById(`guestOldPID-${i}`)?.value?.trim() || '';
                 const newPID = document.getElementById(`guestNewPID-${i}`)?.value?.trim() || '';
                 const roomType = document.getElementById(`roomType-${i}`)?.value;
-                const sharerName = document.getElementById(`sharerName-${i}`)?.value;
-                const sharerOldPID = document.getElementById(`sharerOldPID-${i}`)?.value?.trim() || '';
-                const sharerNewPID = document.getElementById(`sharerNewPID-${i}`)?.value?.trim() || '';
 
                 if (name && roomType) {
                     const pidDisplay = resolvePID(oldPID, newPID);
                     let guestLine = `${name} - ${pidDisplay}`;
-                    // 如果有Sharer名字，就添加Sharer信息
-                    if (sharerName) {
-                        const finalSharerPID = resolvePID(sharerOldPID, sharerNewPID);
-                        guestLine += `\n(Sharer: ${sharerName} - ${finalSharerPID})`;
+                    
+                    // V2.0.40: Collect all sharers for this guest
+                    const sharerCount = state.sharerCount[i] || 0;
+                    for (let s = 1; s <= sharerCount; s++) {
+                        const sharerName = document.getElementById(`sharerName-${i}-${s}`)?.value?.trim();
+                        if (sharerName) {
+                            const sharerOldPID = document.getElementById(`sharerOldPID-${i}-${s}`)?.value?.trim() || '';
+                            const sharerNewPID = document.getElementById(`sharerNewPID-${i}-${s}`)?.value?.trim() || '';
+                            const finalSharerPID = resolvePID(sharerOldPID, sharerNewPID);
+                            guestLine += `\n(Sharer: ${sharerName} - ${finalSharerPID})`;
+                        }
                     }
+                    
                     guestLines.push(guestLine);
                     roomLines.push(`${name} - ${roomType}`);
                     
