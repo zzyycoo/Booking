@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.44</title>
+    <title>Hotel Book Email Generator V2.0.45</title>
     <!--
         Hotel Book Email Generator
         Version: 2.0.26
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-03-21
+
+        Changelog V2.0.45:
+        - Added IXORA button to hotel quick selection
+        - Fixed setHotel function to support IXORA active state
 
         Changelog V2.0.44:
         - Added new hotel: IXORA with room types and promotions
@@ -1514,7 +1518,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.44</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.45</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -2019,6 +2023,7 @@
                             <div class="quick-select-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                                 <button type="button" onclick="setHotel('IC')" class="quick-btn" id="hotelBtn-IC">IC</button>
                                 <button type="button" onclick="setHotel('HIR')" class="quick-btn" id="hotelBtn-HIR">HIR</button>
+                                <button type="button" onclick="setHotel('IXORA')" class="quick-btn" id="hotelBtn-IXORA">IXORA</button>
                             </div>
                         </div>
                     </div>
@@ -2871,12 +2876,13 @@
             document.getElementById(inputId).value = location;
         }
 
-        // V2.0.31: Hotel quick select
+        // V2.0.45: Hotel quick select (supports IC, HIR, IXORA)
         function setHotel(hotel) {
             document.getElementById('hotelName').value = hotel;
             // Update button styles
             document.getElementById('hotelBtn-IC').classList.toggle('active', hotel === 'IC');
             document.getElementById('hotelBtn-HIR').classList.toggle('active', hotel === 'HIR');
+            document.getElementById('hotelBtn-IXORA').classList.toggle('active', hotel === 'IXORA');
             // Update room types
             updateRoomTypes();
         }
