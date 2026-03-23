@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hotel Service Booking System - Room, Car, Golf & Bus booking management.">
+  <meta name="theme-color" content="#1a4d2e">
+  <title>Hotel Service Booking System v3.0</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏨</text></svg>">
+  
+  <!-- Litepicker for date range selection -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1>🏨 Hotel Service Booking System</h1>
+      <div class="version">v3.0.0 | Modular Vite Architecture</div>
+    </header>
+
+    <!-- Service Selector -->
+    <section class="section">
+      <h2 class="section-title">Select Services</h2>
+      <div id="service-selector" class="service-grid">
+        <!-- Services will be rendered here -->
+      </div>
+    </section>
+
+    <!-- Room Booking Section -->
+    <section id="room-section" class="section" style="display: none;">
+      <h2 class="section-title">🏨 Room Booking</h2>
+      
+      <!-- Progress Bar -->
+      <div class="progress-bar-container">
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">Complete required fields</div>
+      </div>
+      
+      <!-- Agent Selector -->
+      <div id="agent-selector"></div>
+      
+      <!-- Hotel Selector -->
+      <div class="form-group">
+        <label>Hotel</label>
+        <div id="hotel-selector" class="quick-select"></div>
+      </div>
+      
+      <!-- Date Selector -->
+      <div id="date-selector"></div>
+      
+      <!-- Authorizer Selector -->
+      <div id="authorizer-selector"></div>
+      
+      <!-- Guests Container -->
+      <h3 class="section-subtitle">👥 Guest Information</h3>
+      <div id="guests-container"></div>
+      
+      <!-- Hidden fields -->
+      <input type="hidden" id="rateCode" value="CASBAR">
+      <input type="hidden" id="deposit" value="No">
+      
+      <div class="btn-group" style="margin-top: 1rem;">
+        <button type="button" class="btn btn-outline" id="btn-add-guest">
+          <span>+</span> Add Guest
+        </button>
+      </div>
+      
+      <!-- Quick Add Services -->
+      <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Need other services?</div>
+        <div id="quick-service-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button type="button" class="quick-service-btn" onclick="window.app.selectService('car')">+ Car Service</button>
+          <button type="button" class="quick-service-btn" onclick="window.app.selectService('golf')">+ Golf Booking</button>
+          <button type="button" class="quick-service-btn" onclick="window.app.selectService('bus')">+ Bus Service</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Car Service Section -->
+    <section id="car-section" class="section" style="display: none;">
+      <h2 class="section-title">🚗 Car Service</h2>
+      <div class="tip-box" id="car-tip" style="display: none;">
+        Guest name will be auto-filled from room booking
+      </div>
+      <div id="cars-container"></div>
+      <div class="btn-group" style="margin-top: 1rem;">
+        <button type="button" class="btn btn-outline" id="btn-add-car">
+          <span>+</span> Add Car
+        </button>
+      </div>
+    </section>
+
+    <!-- Golf Booking Section -->
+    <section id="golf-section" class="section" style="display: none;">
+      <h2 class="section-title">⛳ Golf Booking</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Date & Time</label>
+          <input type="datetime-local" id="golf-datetime" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Number of Pax</label>
+          <input type="number" id="golf-pax" min="1" value="1" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Payment</label>
+          <select id="golf-payment" class="form-input">
+            <option value="pro +600/1000 – post to room">pro +600/1000 – post to room</option>
+            <option value="Primary Comp">Primary Comp</option>
+            <option value="GOA">GOA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Note</label>
+          <input type="text" id="golf-note" value="Casino Rate (If guests show CSN membership)" class="form-input">
+        </div>
+        <div class="form-group">
+          <label>Authorizer</label>
+          <input type="text" id="golf-authorizer" value="Jian.Xu" class="form-input">
+        </div>
+      </div>
+      <h3 class="section-subtitle">👥 Guest List</h3>
+      <div id="golf-guests-container"></div>
+    </section>
+
+    <!-- Bus Service Section -->
+    <section id="bus-section" class="section" style="display: none;">
+      <h2 class="section-title">🚌 Bus Service</h2>
+      
+      <div class="form-group">
+        <label>Passenger Name</label>
+        <input type="text" id="bus-passenger" placeholder="Enter passenger name" class="form-input">
+      </div>
+      
+      <div class="form-group">
+        <label>Select Route(s)</label>
+        <div class="quick-select">
+          <button type="button" class="quick-btn" id="btn-hcm-ht" onclick="window.app.toggleBusRoute('hcmToHt')">HCM → HT</button>
+          <button type="button" class="quick-btn" id="btn-ht-hcm" onclick="window.app.toggleBusRoute('htToHcm')">HT → HCM</button>
+        </div>
+      </div>
+      
+      <!-- HCM → HT Route Form -->
+      <div id="bus-form-hcm-ht" class="bus-route-form" style="display: none; margin-top: 1rem;">
+        <h4>📍 HCM → HT Details</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Departure Time</label>
+            <input type="text" id="time-hcm-ht" placeholder="e.g. 12:00 pm" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="date-hcm-ht" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Number of Seats</label>
+            <input type="number" id="seats-hcm-ht" value="5" class="form-input">
+          </div>
+        </div>
+      </div>
+      
+      <!-- HT → HCM Route Form -->
+      <div id="bus-form-ht-hcm" class="bus-route-form" style="display: none; margin-top: 1rem;">
+        <h4>📍 HT → HCM Details</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Departure Time</label>
+            <input type="text" id="time-ht-hcm" placeholder="e.g. 14:00 pm" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="date-ht-hcm" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Number of Seats</label>
+            <input type="number" id="seats-ht-hcm" value="5" class="form-input">
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-top: 1rem;">
+        <label>Authorizer</label>
+        <input type="text" id="bus-authorizer" value="Jian.Xu" class="form-input">
+      </div>
+    </section>
+
+    <!-- Email Preview -->
+    <section id="email-preview-section" class="section">
+      <h2 class="section-title">📧 Email Preview</h2>
+      <div id="email-preview" class="email-preview"></div>
+    </section>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button type="button" class="btn btn-primary btn-lg" id="btn-generate">
+        Generate Email
+      </button>
+      <button type="button" class="btn btn-secondary btn-lg" id="btn-copy">
+        Copy to Clipboard
+      </button>
+      <button type="button" class="btn btn-outline btn-lg" id="btn-send">
+        Send Email
+      </button>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Hotel Service Booking System v3.0 | Modular Architecture</p>
+    </footer>
+  </div>
+
+  <!-- Litepicker -->
+  <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.umd.js"></script>
+  
+  <!-- Main script -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

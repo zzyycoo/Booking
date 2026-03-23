@@ -1,0 +1,77 @@
+{
+  "hotels": {
+    "IC": {
+      "name": "IC",
+      "displayName": "InterContinental",
+      "roomTypes": [
+        { "types": ["KDXN", "KDXS", "TDXN", "TDXS", "KLON", "KLOS", "TLON", "TLOS"], "promotion": 188 },
+        { "types": ["KOTS", "KOTN", "TOTS", "TOTN"], "promotion": 188 },
+        { "types": ["KVUS", "KVUN", "TVUS", "TVUN"], "promotion": 388 },
+        { "types": ["XEXS", "XEXN", "XOTS", "XOTN", "XVUS", "XVUN"], "promotion": 3188 },
+        { "types": ["XFTS", "XFTN", "XLOS", "XLON"], "promotion": 3888 }
+      ],
+      "quickTypes": ["KOTS", "KVUS", "TVUS", "TOTS"]
+    },
+    "HIR": {
+      "name": "HIR",
+      "displayName": "Ho Tram",
+      "roomTypes": [
+        { "types": ["TSTS", "TSTN", "KPUS", "TPUN", "TPU"], "promotion": 188 },
+        { "types": ["TVUN", "TVUS", "KLON", "KLOS"], "promotion": 188 },
+        { "types": ["KOTS", "TOTS"], "promotion": 388 },
+        { "types": ["XOTN", "XOTS", "XFTN", "XFTS", "XLOS", "XCIS"], "promotion": 888 },
+        { "types": ["X2ON", "X2OS", "XDBS"], "promotion": 1888 },
+        { "types": ["XVUN", "XVUS"], "promotion": 2188 },
+        { "types": ["X2AN", "X2AS"], "promotion": 3188 }
+      ],
+      "quickTypes": ["KLOS", "TVUS", "KLON", "TSTS"]
+    },
+    "IXORA": {
+      "name": "IXORA",
+      "displayName": "Ixora",
+      "roomTypes": [
+        { "types": ["1BACC", "1BSC", "1BDO"], "promotion": 188 },
+        { "types": ["1BPG"], "promotion": 188 },
+        { "types": ["2BPO"], "promotion": 3188 },
+        { "types": ["2BVP"], "promotion": 5188 },
+        { "types": ["2BBV"], "promotion": 7188 },
+        { "types": ["3BPV"], "promotion": 8188 },
+        { "types": ["3BBV"], "promotion": 9188 }
+      ],
+      "quickTypes": ["1BACC", "1BPG", "2BPO", "2BVP"]
+    }
+  },
+  "agents": {
+    "quickSelect": [
+      { "code": "IM", "name": "IM" },
+      { "code": "A03", "name": "A03 Tun Naing" },
+      { "code": "A40", "name": "A40 Wang Kan" },
+      { "code": "A111", "name": "A111" },
+      { "code": "A165", "name": "A165" },
+      { "code": "A171", "name": "A171" },
+      { "code": "A173", "name": "A173" }
+    ]
+  },
+  "services": {
+    "room": {
+      "enabled": true,
+      "icon": "🏨",
+      "title": "Room Booking"
+    },
+    "car": {
+      "enabled": true,
+      "icon": "🚗",
+      "title": "Car Service"
+    },
+    "golf": {
+      "enabled": true,
+      "icon": "⛳",
+      "title": "Golf Booking"
+    },
+    "bus": {
+      "enabled": true,
+      "icon": "🚌",
+      "title": "Bus Service"
+    }
+  }
+}
