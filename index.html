@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a4d2e">
+    <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Booking">
+    <link rel="manifest" href="/booking/manifest.json">
+    <link rel="apple-touch-icon" href="/booking/icons/icon-192x192.png">
     <title>Hotel Book Email Generator V2.0.47</title>
     <!--
         Hotel Book Email Generator
@@ -4088,6 +4095,19 @@ ${busContent}`;
                 try { el.setSelectionRange(pos, pos); } catch(e) {}
             }
         });
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/booking/service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registered:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
