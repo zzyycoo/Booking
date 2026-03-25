@@ -4180,10 +4180,15 @@ ${busContent}`;
         function updateOnlineStatus() {
             if (!navigator.onLine) {
                 showMessage('📴 Offline mode - App is working from cache', true);
+            } else {
+                showMessage('🌐 Online', true);
             }
         }
+        
+        // Check status immediately on load and set up listeners
+        window.addEventListener('load', updateOnlineStatus);
         window.addEventListener('online', () => showMessage('🌐 Back online', true));
-        window.addEventListener('offline', updateOnlineStatus);
+        window.addEventListener('offline', () => showMessage('📴 Offline mode - App is working from cache', true));
     </script>
 </body>
 </html>
