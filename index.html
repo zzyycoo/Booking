@@ -4169,10 +4169,28 @@ ${busContent}`;
                 navigator.serviceWorker.register('./service-worker.js')
                     .then(function(registration) {
                         console.log('ServiceWorker registered:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    showMessage('📦 New version available! Please refresh page.', true);
+                                }
+                            });
+                        });
                     })
                     .catch(function(error) {
                         console.log('ServiceWorker registration failed:', error);
                     });
+                    
+                // Listen for messages from service worker
+                navigator.serviceWorker.addEventListener('message', function(event) {
+                    if (event.data === 'reload') {
+                        window.location.reload();
+                    }
+                });
             });
         }
 

@@ -1,5 +1,5 @@
 // Service Worker for Hotel Booking Email Generator PWA
-const CACHE_NAME = 'booking-cache-v2';
+const CACHE_NAME = 'booking-cache-v3';
 const urlsToCache = [
   './',
   './index.html',
@@ -40,6 +40,12 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => {
       console.log('Service Worker: Now active');
+      // Notify all clients that new version is active
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage('reload');
+        });
+      });
       return self.clients.claim();
     })
   );
