@@ -10,12 +10,25 @@
     <meta name="apple-mobile-web-app-title" content="Booking">
     <link rel="manifest" href="/booking/manifest.json">
     <link rel="apple-touch-icon" href="/booking/icons/icon-192x192.png">
-    <title>Hotel Book Email Generator V2.0.47</title>
+    <title>Hotel Book Email Generator V2.0.49</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.26
-        Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
-        Last Updated: 2026-03-21
+        Version: 2.0.49
+        Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
+        Last Updated: 2026-03-25
+
+        Changelog V2.0.49:
+        - Added PWA (Progressive Web App) support
+        - Added manifest.json for installable app
+        - Added service worker for offline functionality
+        - Added app icons for all sizes (72x72 to 512x512)
+        - Added theme-color and apple-mobile-web-app meta tags
+
+        Changelog V2.0.48:
+        - Fixed: Save to Sheets now includes all Sharers (not just first one)
+        - Hotel buttons now have distinct blue style (vs Agent buttons gold)
+        - Removed Promotion display from Room Booking section
+        - Promotion info only shown in generated email
 
         Changelog V2.0.47:
         - Streamlined UI: removed redundant labels
@@ -1128,6 +1141,54 @@
             color: #000000;
         }
 
+        /* Hotel quick buttons - distinct style */
+        .hotel-btn {
+            padding: 0.375rem 0.75rem;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            color: #1565c0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hotel-btn:hover {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .hotel-btn.active {
+            background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+            border-color: #0d47a1;
+            color: white;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.4);
+        }
+
+        [data-theme="dark"] .hotel-btn {
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            border-color: #42a5f5;
+            color: #e3f2fd;
+        }
+
+        [data-theme="dark"] .hotel-btn:hover {
+            background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
+            color: #000;
+        }
+
+        [data-theme="dark"] .hotel-btn.active {
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+            border-color: #90caf9;
+            color: #000;
+            box-shadow: 0 2px 8px rgba(66, 165, 245, 0.4);
+        }
+
         .location-input {
             width: 100%;
         }
@@ -1537,7 +1598,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.47</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.48</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -2048,12 +2109,14 @@
                         </div>
                         <div class="form-group" style="flex: 0 0 auto; margin-bottom: 0;">
                             <div class="quick-select-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button type="button" onclick="setHotel('IC')" class="quick-btn" id="hotelBtn-IC">IC</button>
-                                <button type="button" onclick="setHotel('HIR')" class="quick-btn" id="hotelBtn-HIR">HIR</button>
-                                <button type="button" onclick="setHotel('IXORA')" class="quick-btn" id="hotelBtn-IXORA">IXORA</button>
+                                <button type="button" onclick="setHotel('IC')" class="hotel-btn" id="hotelBtn-IC">IC</button>
+                                <button type="button" onclick="setHotel('HIR')" class="hotel-btn" id="hotelBtn-HIR">HIR</button>
+                                <button type="button" onclick="setHotel('IXORA')" class="hotel-btn" id="hotelBtn-IXORA">IXORA</button>
                             </div>
                         </div>
                     </div>
+                    <!-- V2.0.47: Hidden hotel field for setHotel function -->
+                    <input type="hidden" id="hotelName" value="">
                                     <!-- V2.0.22: Unified Date Range Picker -->
                     <div class="form-row" style="align-items: flex-start;">
                         <div class="form-group" style="flex: 1;">
@@ -2080,11 +2143,6 @@
                     <!-- Hidden fields for default values -->
                     <input type="hidden" id="rateCode" value="CASBAR">
                     <input type="hidden" id="deposit" value="No">
-                    <div style="background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--card) 100%); padding: 0.75rem 1rem; border-radius: 8px; margin: 0.75rem 0; border-left: 3px solid var(--secondary); font-size: 0.85rem; line-height: 1.6;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                            <div><strong>Promotion:</strong> <span id="displayPromotion">-</span></div>
-                        </div>
-                    </div>
                     <div class="section-title" style="margin-top: 1rem;">👥 Guest Information</div>
                     <div id="guestsContainer"></div>
                     <button class="btn btn-add" onclick="addGuest()">+ Add Guest</button>
@@ -4031,11 +4089,14 @@ ${busContent}`;
                     const name = document.getElementById(`guestName-${i}`)?.value;
                     if (name) guests.push({ oldPID, newPID, name });
 
-                    const sharerForm = document.getElementById(`sharerForm-${i}`);
-                    if (sharerForm && sharerForm.style.display !== 'none') {
-                        const sharerOldPID = document.getElementById(`sharerOldPID-${i}`)?.value || '';
-                        const sharerNewPID = document.getElementById(`sharerNewPID-${i}`)?.value || 'New';
-                        const sharerName = document.getElementById(`sharerName-${i}`)?.value;
+                    // V2.0.40: Save all sharers for this guest
+                    const sharerCount = state.sharerCount?.[i] || 0;
+                    for (let s = 1; s <= sharerCount; s++) {
+                        const sharerEl = document.getElementById(`sharer-${i}-${s}`);
+                        if (!sharerEl) continue;
+                        const sharerOldPID = document.getElementById(`sharerOldPID-${i}-${s}`)?.value || '';
+                        const sharerNewPID = document.getElementById(`sharerNewPID-${i}-${s}`)?.value || 'New';
+                        const sharerName = document.getElementById(`sharerName-${i}-${s}`)?.value;
                         if (sharerName) guests.push({ oldPID: sharerOldPID, newPID: sharerNewPID, name: sharerName });
                     }
                 }
