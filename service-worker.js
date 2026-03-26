@@ -1,5 +1,5 @@
 // Service Worker for Hotel Booking Email Generator PWA
-const CACHE_NAME = 'booking-cache-v3';
+const CACHE_NAME = 'booking-cache-v4';
 const urlsToCache = [
   './',
   './index.html',
