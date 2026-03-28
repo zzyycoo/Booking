@@ -84,10 +84,10 @@ function renderDateSelector() {
   container.innerHTML = `
     <div class="form-row">
       <div class="form-group" style="flex: 1;">
-        <label>Stay Dates</label>
+        <label>Stay Dates *</label>
         <input type="text" id="dateRangePicker" placeholder="Select dates..." readonly class="form-input" style="cursor: pointer;">
-        <input type="hidden" id="checkIn" value="${getTodayStr()}">
-        <input type="hidden" id="checkOut" value="${getTomorrowStr()}">
+        <input type="hidden" id="checkIn" value="">
+        <input type="hidden" id="checkOut" value="">
         <div id="dateRangeDisplay" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;"></div>
       </div>
     </div>
@@ -138,11 +138,9 @@ function initDatePicker() {
       dateRangePicker.destroy();
     }
 
-    dateRangePicker = new Litepicker({
+    const pickerConfig = {
       element: pickerEl,
       singleMode: false,
-      startDate: checkInEl.value,
-      endDate: checkOutEl.value,
       format: 'DD MMM YYYY',
       delimiter: ' → ',
       tooltipText: { one: 'night', other: 'nights' },
@@ -154,7 +152,13 @@ function initDatePicker() {
           updateDateRangeText(checkInEl.value, checkOutEl.value);
         });
       }
-    });
+    };
+
+    // Only set startDate/endDate if values exist
+    if (checkInEl.value) pickerConfig.startDate = checkInEl.value;
+    if (checkOutEl.value) pickerConfig.endDate = checkOutEl.value;
+
+    dateRangePicker = new Litepicker(pickerConfig);
   } else {
     // Fallback to native date inputs
     pickerEl.style.display = 'none';
@@ -162,12 +166,12 @@ function initDatePicker() {
     fallbackDiv.className = 'form-row';
     fallbackDiv.innerHTML = `
       <div class="form-group">
-        <label>Check In</label>
-        <input type="date" id="checkInNative" value="${getTodayStr()}" class="form-input">
+        <label>Check In *</label>
+        <input type="date" id="checkInNative" value="" class="form-input">
       </div>
       <div class="form-group">
-        <label>Check Out</label>
-        <input type="date" id="checkOutNative" value="${getTomorrowStr()}" class="form-input">
+        <label>Check Out *</label>
+        <input type="date" id="checkOutNative" value="" class="form-input">
       </div>
     `;
     pickerEl.parentNode.appendChild(fallbackDiv);
