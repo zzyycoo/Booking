@@ -2133,10 +2133,10 @@
                                     <!-- V2.0.22: Unified Date Range Picker -->
                     <div class="form-row" style="align-items: flex-start;">
                         <div class="form-group" style="flex: 1;">
-                            <label>Stay Dates</label>
+                            <label>Stay Dates *</label>
                             <input type="text" id="dateRangePicker" placeholder="Select dates..." readonly style="cursor: pointer;">
-                            <input type="hidden" id="checkIn" value="${getTodayStr()}">
-                            <input type="hidden" id="checkOut" value="${getTomorrowStr()}">
+                            <input type="hidden" id="checkIn" value="">
+                            <input type="hidden" id="checkOut" value="">
                             <div id="dateRangeDisplay" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;"></div>
                         </div>
                     </div>
@@ -2590,11 +2590,10 @@
             }
 
             // V2.0.38: Allow past dates for check-in (for back-dated bookings)
-            dateRangePicker = new Litepicker({
+            // V2.0.52: Only set startDate/endDate if values exist
+            const pickerConfig = {
                 element: pickerEl,
                 singleMode: false,
-                startDate: checkInEl.value,
-                endDate: checkOutEl.value,
                 format: 'DD MMM YYYY',
                 delimiter: ' → ',
                 tooltipText: {
@@ -2611,7 +2610,13 @@
                         updateDateRangeText(checkInEl.value, checkOutEl.value);
                     });
                 }
-            });
+            };
+
+            // Only set startDate/endDate if values exist
+            if (checkInEl.value) pickerConfig.startDate = checkInEl.value;
+            if (checkOutEl.value) pickerConfig.endDate = checkOutEl.value;
+
+            dateRangePicker = new Litepicker(pickerConfig);
         }
 
         function updateDateRangeText(checkIn, checkOut) {
