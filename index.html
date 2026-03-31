@@ -3,12 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Book Email Generator V2.0.48</title>
+    <meta name="theme-color" content="#1a4d2e">
+    <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Booking">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+    <title>Hotel Book Email Generator V2.0.53</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.48
-        Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
-        Last Updated: 2026-03-22
+        Version: 2.0.53
+        Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
+        Last Updated: 2026-03-29
+
+        Changelog V2.0.53:
+        - Fixed: Stay Dates now truly empty on page load (was cached by service worker)
+        - Updated service worker cache version
+
+        Changelog V2.0.52:
+        - Removed default dates for check-in/check-out fields
+        - Check-in and check-out are now required fields (must select before generating)
+        - Added validation for empty date fields
+
+        Changelog V2.0.51:
+        - Fixed PWA save to Google Sheets issue (cleared stale cache)
+        - Service worker cache updated to v4
+        - Fixed PWA offline functionality
+        - Service worker now uses Cache First strategy
+        - Added offline/online status indicators
+        - Fixed paths to use relative URLs for better compatibility
+
+        Changelog V2.0.49:
+        - Added PWA (Progressive Web App) support
+        - Added manifest.json for installable app
+        - Added service worker for offline functionality
+        - Added app icons for all sizes (72x72 to 512x512)
+        - Added theme-color and apple-mobile-web-app meta tags
 
         Changelog V2.0.48:
         - Fixed: Save to Sheets now includes all Sharers (not just first one)
@@ -1584,7 +1615,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.48</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.53</span></p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -2106,10 +2137,10 @@
                                     <!-- V2.0.22: Unified Date Range Picker -->
                     <div class="form-row" style="align-items: flex-start;">
                         <div class="form-group" style="flex: 1;">
-                            <label>Stay Dates</label>
+                            <label>Stay Dates *</label>
                             <input type="text" id="dateRangePicker" placeholder="Select dates..." readonly style="cursor: pointer;">
-                            <input type="hidden" id="checkIn" value="${getTodayStr()}">
-                            <input type="hidden" id="checkOut" value="${getTomorrowStr()}">
+                            <input type="hidden" id="checkIn" value="">
+                            <input type="hidden" id="checkOut" value="">
                             <div id="dateRangeDisplay" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;"></div>
                         </div>
                     </div>
@@ -2563,11 +2594,10 @@
             }
 
             // V2.0.38: Allow past dates for check-in (for back-dated bookings)
-            dateRangePicker = new Litepicker({
+            // V2.0.52: Only set startDate/endDate if values exist
+            const pickerConfig = {
                 element: pickerEl,
                 singleMode: false,
-                startDate: checkInEl.value,
-                endDate: checkOutEl.value,
                 format: 'DD MMM YYYY',
                 delimiter: ' → ',
                 tooltipText: {
@@ -2584,7 +2614,13 @@
                         updateDateRangeText(checkInEl.value, checkOutEl.value);
                     });
                 }
-            });
+            };
+
+            // Only set startDate/endDate if values exist
+            if (checkInEl.value) pickerConfig.startDate = checkInEl.value;
+            if (checkOutEl.value) pickerConfig.endDate = checkOutEl.value;
+
+            dateRangePicker = new Litepicker(pickerConfig);
         }
 
         function updateDateRangeText(checkIn, checkOut) {
@@ -4142,6 +4178,51 @@ ${busContent}`;
                 try { el.setSelectionRange(pos, pos); } catch(e) {}
             }
         });
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registered:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    showMessage('📦 New version available! Please refresh page.', true);
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+                    
+                // Listen for messages from service worker
+                navigator.serviceWorker.addEventListener('message', function(event) {
+                    if (event.data === 'reload') {
+                        window.location.reload();
+                    }
+                });
+            });
+        }
+
+        // Offline/Online status indicator
+        function updateOnlineStatus() {
+            if (!navigator.onLine) {
+                showMessage('📴 Offline mode - App is working from cache', true);
+            } else {
+                showMessage('🌐 Online', true);
+            }
+        }
+        
+        // Check status immediately on load and set up listeners
+        window.addEventListener('load', updateOnlineStatus);
+        window.addEventListener('online', () => showMessage('🌐 Back online', true));
+        window.addEventListener('offline', () => showMessage('📴 Offline mode - App is working from cache', true));
     </script>
 </body>
 </html>
