@@ -2210,6 +2210,7 @@
                             <option value="VIE1018 LIU JIGUANG">
                             <option value="VIE1037 ZHU WENJIN">
                             <option value="VIE1039 TAN CHEE KEONG">
+                            <option value="VIE1040 ZHENG JIANSONG">
                         </datalist>
                     </div>
                 </div>` : '';
@@ -2249,6 +2250,7 @@
                             <option value="VIE1018 LIU JIGUANG">
                             <option value="VIE1037 ZHU WENJIN">
                             <option value="VIE1039 TAN CHEE KEONG">
+                            <option value="VIE1040 ZHENG JIANSONG">
                         </datalist>
                     </div>
                 </div>` : '';
@@ -2317,6 +2319,7 @@
                             <option value="VIE1018 LIU JIGUANG">
                             <option value="VIE1037 ZHU WENJIN">
                             <option value="VIE1039 TAN CHEE KEONG">
+                            <option value="VIE1040 ZHENG JIANSONG">
                         </datalist>
                     </div>
                     <div class="form-group">
@@ -3023,10 +3026,11 @@
                 'VIE1018': 'VIE1018 LIU JIGUANG',
                 'VIE1037': 'VIE1037 ZHU WENJIN',
                 'VIE1039': 'VIE1039 TAN CHEE KEONG'
+                'VIE1040': 'VIE1040 ZHENG JIANSONG'
             };
             document.getElementById('agentName').value = agentMap[agentCode] || agentCode;
             // Update button styles
-            ['IM', 'VIE1001', 'VIE1006', 'VIE1010', 'VIE1013', 'VIE1014', 'VIE1018', 'VIE1037', 'VIE1039'].forEach(code => {
+            ['IM', 'VIE1001', 'VIE1006', 'VIE1010', 'VIE1013', 'VIE1014', 'VIE1018', 'VIE1037', 'VIE1039','VIE1040'].forEach(code => {
                 const btn = document.getElementById(`agentBtn-${code}`);
                 if (btn) btn.classList.toggle('active', agentCode === code);
             });
