@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <title>Hotel Book Email Generator V2.0.56</title>
+    <title>Hotel Book Email Generator V2.0.57</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.56
+        Version: 2.0.57
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
         Last Updated: 2026-05-09
+
+        Changelog V2.0.57:
+        - Email subjects now show agent code only in [] (e.g. [VIE1001] instead of [VIE1001 Tun Naing])
+        - Homepage display remains unchanged
 
         Changelog V2.0.56:
         - Removed PWA support (deleted manifest.json, service-worker.js, icons/)
@@ -3013,6 +3017,34 @@
         }
 
         // V2.0.46: Agent quick select with auto-fill names
+        // V2.0.57: Helper to extract agent code from agentName value (e.g. "VIE1001 Tun Naing" -> "VIE1001")
+        function getAgentCode() {
+            const agentName = document.getElementById('agentName')?.value?.trim() || '';
+            // Extract just the code (first word before space)
+            const match = agentName.match(/^([A-Za-z0-9]+)/);
+            return match ? match[1] : agentName;
+        }
+        function getCarAgentCode() {
+            const agentName = document.getElementById('carAgent')?.value?.trim() || '';
+            const match = agentName.match(/^([A-Za-z0-9]+)/);
+            return match ? match[1] : agentName;
+        }
+        function getGolfAgentCode() {
+            const agentName = document.getElementById('golfAgent')?.value?.trim() || '';
+            const match = agentName.match(/^([A-Za-z0-9]+)/);
+            return match ? match[1] : agentName;
+        }
+        function getBusAgentCode() {
+            const agentName = document.getElementById('busAgent')?.value?.trim() || '';
+            const match = agentName.match(/^([A-Za-z0-9]+)/);
+            return match ? match[1] : agentName;
+        }
+        function getA171AgentCode() {
+            const agentName = document.getElementById('a171Agent')?.value?.trim() || '';
+            const match = agentName.match(/^([A-Za-z0-9]+)/);
+            return match ? match[1] : agentName;
+        }
+
         function setAgent(agentCode) {
             const agentMap = {
                 'IM': 'IM',
@@ -3515,13 +3547,14 @@
                     combinedEmail = carBody;
                     // Standalone car: [Agent] PID Name Car Service Date
                     const agent = document.getElementById('carAgent')?.value?.trim() || '';
+                    const agentCode = getCarAgentCode();
                     const oldPID = document.getElementById('carOldPID-1')?.value?.trim() || '';
                     const newPID = document.getElementById('carNewPID-1')?.value?.trim() || '';
                     const pid = resolvePID(oldPID, newPID);
                     const name = document.getElementById('carName-1')?.value?.trim() || '';
                     const date = formatDate(document.getElementById('carDate-1')?.value);
                     if (agent && name) {
-                        subject = `[${agent}] ${pid} ${name} Car Service ${date}`;
+                        subject = `[${agentCode}] ${pid} ${name} Car Service ${date}`;
                     } else {
                         const subjectMatch = carEmail.match(/Subject:\s*(.+?)$/m);
                         subject = subjectMatch ? subjectMatch[1].trim() : 'Car Booking Request';
@@ -3541,6 +3574,7 @@
                     const isStandalone = !state.selectedServices.has('room');
                     if (isStandalone) {
                         const agent = document.getElementById('golfAgent')?.value?.trim() || '';
+                        const agentCode = getGolfAgentCode();
                         const firstId = state.golfGuests.find(id => document.getElementById(`golfGuest-${id}`));
                         const oldPID = document.getElementById(`golfGuestOldPID-${firstId}`)?.value?.trim() || '';
                         const newPID = document.getElementById(`golfGuestNewPID-${firstId}`)?.value?.trim() || '';
@@ -3549,7 +3583,7 @@
                         const golfDateTime = document.getElementById('golfDateTime')?.value;
                         const date = golfDateTime ? formatDate(golfDateTime.split('T')[0]) : '';
                         if (agent && name) {
-                            subject = `[${agent}] ${pid} ${name} Golf Booking ${date}`;
+                            subject = `[${agentCode}] ${pid} ${name} Golf Booking ${date}`;
                         } else {
                             const subjectMatch = golfEmail.match(/Subject:\s*(.+?)$/m);
                             subject = subjectMatch ? subjectMatch[1].trim() : 'Golf Booking Request';
@@ -3571,6 +3605,7 @@
                     combinedEmail = busBody;
                     // Standalone bus: [Agent] PID Name Bus Service Date
                     const agent = document.getElementById('busAgent')?.value?.trim() || '';
+                    const agentCode = getBusAgentCode();
                     const oldPID = document.getElementById('busGuestOldPID')?.value?.trim() || '';
                     const newPID = document.getElementById('busGuestNewPID')?.value?.trim() || '';
                     const pid = resolvePID(oldPID, newPID);
@@ -3581,7 +3616,7 @@
                         state.busRoutes.htToHcm ? document.getElementById('dateHtToHcm')?.value : ''
                     );
                     if (agent && name) {
-                        subject = `[${agent}] ${pid} ${name} Bus Service ${date}`;
+                        subject = `[${agentCode}] ${pid} ${name} Bus Service ${date}`;
                     } else {
                         const subjectMatch = busEmail.match(/Subject:\s*(.+?)$/m);
                         subject = subjectMatch ? subjectMatch[1].trim() : 'Bus Booking Request';
@@ -3670,6 +3705,7 @@
                 document.getElementById('a171Agent').focus();
                 return;
             }
+            const agentCode = getA171AgentCode();
 
             const visitDate = document.getElementById('a171Date')?.value;
             if (!visitDate) {
@@ -3687,7 +3723,7 @@
 
             if (state.a171SubjectType === 'oneday') {
                 // Subject: [Agent] PID Name One Day Trip Date
-                subject = `[${agent}] ${firstPID} ${firstName} One Day Trip ${dateStr}`;
+                subject = `[${agentCode}] ${firstPID} ${firstName} One Day Trip ${dateStr}`;
 
                 // Body: single intro line, then all guests listed below
                 const guestLines = names.map((name, idx) => `${pids[idx]} ${name}`).join(',\n');
@@ -3699,7 +3735,7 @@ ${guestLines}`;
 
             } else {
                 // Patron Registration
-                subject = `[${agent}] Patron Registration - ${firstName} ${dateStr}`;
+                subject = `[${agentCode}] Patron Registration - ${firstName} ${dateStr}`;
 
                 body = `Dear @The Grand Ho Tram - HTR Management @The Grand Ho Tram - Casino Audit
 
@@ -3727,6 +3763,7 @@ ${names.join('\n')}`;
         }
 
         function generateRoomEmail() {
+            const agentCode = getAgentCode();
             const agent = document.getElementById('agentName')?.value;
             const hotel = document.getElementById('hotelName')?.value;
             const authorizer = document.getElementById('authorizer')?.value || 'Jian.Xu';
@@ -3796,7 +3833,7 @@ ${names.join('\n')}`;
             }
 
             const displayName = firstGuestName || 'Guest';
-            const subject = `[${agent}] ${displayPID} ${displayName} ${hotel} Hotel Room Booking on ${checkIn}`;
+            const subject = `[${agentCode}] ${displayPID} ${displayName} ${hotel} Hotel Room Booking on ${checkIn}`;
             
             const promotionDisplay = promotions.length > 0 ? promotions.join('/') : '';
 
