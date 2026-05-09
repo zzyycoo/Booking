@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1a4d2e">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Booking">
-    <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
-    <title>Hotel Book Email Generator V2.0.55</title>
+    <title>Hotel Book Email Generator V2.0.56</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.54
-        Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
-        Last Updated: 2026-04-14
+        Version: 2.0.56
+        Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
+        Last Updated: 2026-05-09
+
+        Changelog V2.0.56:
+        - Removed PWA support (deleted manifest.json, service-worker.js, icons/)
+        - Removed PWA meta tags and service worker registration
 
         Changelog V2.0.55:
         - Updated Agent list: IM, VIE1001~VIE1039 (8 agents)
@@ -4206,50 +4204,6 @@ ${busContent}`;
             }
         });
 
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(function(registration) {
-                        console.log('ServiceWorker registered:', registration.scope);
-                        
-                        // Check for updates
-                        registration.addEventListener('updatefound', function() {
-                            const newWorker = registration.installing;
-                            newWorker.addEventListener('statechange', function() {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // New version available
-                                    showMessage('📦 New version available! Please refresh page.', true);
-                                }
-                            });
-                        });
-                    })
-                    .catch(function(error) {
-                        console.log('ServiceWorker registration failed:', error);
-                    });
-                    
-                // Listen for messages from service worker
-                navigator.serviceWorker.addEventListener('message', function(event) {
-                    if (event.data === 'reload') {
-                        window.location.reload();
-                    }
-                });
-            });
-        }
-
-        // Offline/Online status indicator
-        function updateOnlineStatus() {
-            if (!navigator.onLine) {
-                showMessage('📴 Offline mode - App is working from cache', true);
-            } else {
-                showMessage('🌐 Online', true);
-            }
-        }
-        
-        // Check status immediately on load and set up listeners
-        window.addEventListener('load', updateOnlineStatus);
-        window.addEventListener('online', () => showMessage('🌐 Back online', true));
-        window.addEventListener('offline', () => showMessage('📴 Offline mode - App is working from cache', true));
     </script>
 </body>
 </html>
