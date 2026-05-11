@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <title>Hotel Book Email Generator V2.0.57</title>
+    <title>Hotel Book Email Generator V2.0.58</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.57
+        Version: 2.0.58
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration
-        Last Updated: 2026-05-09
+        Last Updated: 2026-05-11
+
+        Changelog V2.0.58:
+        - Added VIE1041 XIN MENGJIAO and VIE1044 to agent list
 
         Changelog V2.0.57:
         - Email subjects now show agent code only in [] (e.g. [VIE1001] instead of [VIE1001 Tun Naing])
@@ -20,7 +23,7 @@
         - Removed PWA meta tags and service worker registration
 
         Changelog V2.0.55:
-        - Updated Agent list: IM, VIE1001~VIE1039 (8 agents)
+        - Updated Agent list: IM, VIE1001~VIE1044 (10 agents)
         - Quick buttons show number only (1001, 1006, 1010, 1013, 1014, 1018, 1037, 1039)
         - IM quick button unchanged
 
@@ -2122,6 +2125,8 @@
                                 <option value="VIE1037 ZHU WENJIN">
                                 <option value="VIE1039 TAN CHEE KEONG">
                                 <option value="VIE1040 ZHENG JIANSONG">
+                                <option value="VIE1041 XIN MENGJIAO">
+                                <option value="VIE1044">
                             </datalist>
                         </div>
                         <div class="form-group" style="flex: 1; margin-bottom: 0;">
@@ -2136,6 +2141,8 @@
                                 <button type="button" onclick="setAgent('VIE1037')" class="quick-btn" id="agentBtn-VIE1037">1037</button>
                                 <button type="button" onclick="setAgent('VIE1039')" class="quick-btn" id="agentBtn-VIE1039">1039</button>
                                 <button type="button" onclick="setAgent('VIE1040')" class="quick-btn" id="agentBtn-VIE1040">1040</button>
+                                <button type="button" onclick="setAgent('VIE1041')" class="quick-btn" id="agentBtn-VIE1041">1041</button>
+                                <button type="button" onclick="setAgent('VIE1044')" class="quick-btn" id="agentBtn-VIE1044">1044</button>
                             </div>
                         </div>
                         <div class="form-group" style="flex: 0 0 auto; margin-bottom: 0;">
@@ -2213,6 +2220,8 @@
                             <option value="VIE1037 ZHU WENJIN">
                             <option value="VIE1039 TAN CHEE KEONG">
                             <option value="VIE1040 ZHENG JIANSONG">
+                            <option value="VIE1041 XIN MENGJIAO">
+                            <option value="VIE1044">
                         </datalist>
                     </div>
                 </div>` : '';
@@ -2253,6 +2262,8 @@
                             <option value="VIE1037 ZHU WENJIN">
                             <option value="VIE1039 TAN CHEE KEONG">
                             <option value="VIE1040 ZHENG JIANSONG">
+                            <option value="VIE1041 XIN MENGJIAO">
+                            <option value="VIE1044">
                         </datalist>
                     </div>
                 </div>` : '';
@@ -2322,6 +2333,8 @@
                             <option value="VIE1037 ZHU WENJIN">
                             <option value="VIE1039 TAN CHEE KEONG">
                             <option value="VIE1040 ZHENG JIANSONG">
+                            <option value="VIE1041 XIN MENGJIAO">
+                            <option value="VIE1044">
                         </datalist>
                     </div>
                     <div class="form-group">
@@ -3056,11 +3069,13 @@
                 'VIE1018': 'VIE1018 LIU JIGUANG',
                 'VIE1037': 'VIE1037 ZHU WENJIN',
                 'VIE1039': 'VIE1039 TAN CHEE KEONG',
-                'VIE1040': 'VIE1040 ZHENG JIANSONG'
+                'VIE1040': 'VIE1040 ZHENG JIANSONG',
+                'VIE1041': 'VIE1041 XIN MENGJIAO',
+                'VIE1044': 'VIE1044'
             };
             document.getElementById('agentName').value = agentMap[agentCode] || agentCode;
             // Update button styles
-            ['IM', 'VIE1001', 'VIE1006', 'VIE1010', 'VIE1013', 'VIE1014', 'VIE1018', 'VIE1037', 'VIE1039','VIE1040'].forEach(code => {
+            ['IM', 'VIE1001', 'VIE1006', 'VIE1010', 'VIE1013', 'VIE1014', 'VIE1018', 'VIE1037', 'VIE1039', 'VIE1040', 'VIE1041', 'VIE1044'].forEach(code => {
                 const btn = document.getElementById(`agentBtn-${code}`);
                 if (btn) btn.classList.toggle('active', agentCode === code);
             });
