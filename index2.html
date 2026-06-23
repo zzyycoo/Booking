@@ -1629,7 +1629,10 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.55</span></p>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.0.59</span>
+                <button onclick="checkForUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-left:6px;">🔄 Check Update</button>
+                <button onclick="forceUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">⚡ Force Update</button>
+            </p>
         </div>
 
         <!-- V2.0: PID Database Import -->
@@ -4261,6 +4264,73 @@ ${busContent}`;
         });
     </script>
     <script>
+    const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/zzyycoo/Booking/root';
+    let _updateAvailable = false;
+
+    function _getPageVersion() {
+        const m = document.title.match(/V[\d.]+/);
+        return m ? m[0] : '';
+    }
+
+    function _showToast(msg, sticky) {
+        var existing = document.getElementById('_toast');
+        if (existing) existing.remove();
+        var el = document.createElement('div');
+        el.id = '_toast';
+        el.textContent = msg;
+        Object.assign(el.style, {
+            position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+            background: '#333', color: '#fff', padding: '10px 20px', borderRadius: '8px',
+            zIndex: 99999, fontSize: '14px', maxWidth: '90%', textAlign: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        });
+        document.body.appendChild(el);
+        if (!sticky) setTimeout(function() { el.remove(); }, 3000);
+    }
+
+    async function checkForUpdate() {
+        try {
+            _showToast('⏳ Checking for updates...', false);
+            var resp = await fetch(GITHUB_RAW_BASE + '/index2.html?t=' + Date.now(), { cache: 'no-store' });
+            if (resp.status === 404) throw new Error('File not found on GitHub');
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            var text = await resp.text();
+            var m = text.match(/<meta\s+name=["']version["']\s+content=["']([^"']+)["']/i);
+            if (!m) m = text.match(/V([\d.]+)/);
+            var latestVersion = m ? m[1] : '';
+            var thisVersion = _getPageVersion();
+            if (!latestVersion) throw new Error('Cannot read version from GitHub file');
+            if (latestVersion !== thisVersion) {
+                _updateAvailable = true;
+                localStorage.setItem('pendingVersion', latestVersion);
+                _showToast('🆕 New version: ' + latestVersion + ' (you have ' + thisVersion + ') — Click [Force Update]', true);
+            } else {
+                _showToast('✅ Already on the latest version (' + thisVersion + ')', false);
+            }
+        } catch (e) {
+            _showToast('⚠️ Update check failed: ' + e.message, false);
+        }
+    }
+
+    async function forceUpdate() {
+        if (!_updateAvailable) {
+            _showToast('No update pending. Click [Check Update] first.', false);
+            return;
+        }
+        try {
+            _showToast('⏳ Downloading update...', true);
+            var resp = await fetch(GITHUB_RAW_BASE + '/index2.html?t=' + Date.now(), { cache: 'no-store' });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            var text = await resp.text();
+            localStorage.setItem('pendingUpdate', text);
+            var url = new URL(window.location.href);
+            url.searchParams.set('_cb', Date.now());
+            window.location.replace(url.toString());
+        } catch (e) {
+            _showToast('❌ Update failed: ' + e.message, false);
+        }
+    }
+
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(function() {
             console.log('Service Worker registered');
