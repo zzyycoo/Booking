@@ -1,0 +1,17 @@
+{
+  "name": "Hotel Book Email Generator",
+  "short_name": "A Kang's Tool",
+  "version": "2.0.59 VIE1041/VIE1044",
+  "description": "Hotel room, car, golf and bus booking email generator with PID database support",
+  "start_url": "/Booking/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='20' fill='%23000'/><text x='90' y='115' font-size='90' text-anchor='middle' fill='%23fff'>B</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
