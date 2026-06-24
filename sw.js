@@ -1,9 +1,9 @@
-// sw.js — Service Worker for Hotel Book Email Generator (index.html)
+// sw.js — Service Worker for Hotel Book Email Generator (index2.html)
 // Version: 2.0.59 — Cache-first, full offline
 
 const CACHE_NAME = 'akang-tool-v2059';
 const CACHE_URLS = [
-  './index.html',
+  './index2.html',
   './manifest.webmanifest',
 ];
 
@@ -58,8 +58,8 @@ self.addEventListener('fetch', event => {
           }
           return response;
         }).catch(() => {
-          if (url.href.includes('index.html')) {
-            return caches.match('./index.html');
+          if (url.href.includes('index2.html')) {
+            return caches.match('./index2.html');
           }
           return new Response('Offline', { status: 503 });
         });
