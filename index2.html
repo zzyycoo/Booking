@@ -4152,7 +4152,7 @@ ${busContent}`;
 
         // Google Sheets保存功能
         function saveToGoogleSheets() {
-            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOpykMzPHrhi6pcthRdASWMQdjXO0VQJilRd9R67i1_GRqtBOPBcHDD8fJrHNjY1znCg/exec';
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxLh7mGeglHPdMLZk8IHoPwXewYgWcDL8Nvu2sr3oU4Da94MGpxyUfRb5fDUCIgbGen/exec';
 
             const now = new Date();
             const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -4193,7 +4193,8 @@ ${busContent}`;
                     const oldPID = document.getElementById(`guestOldPID-${i}`)?.value || '';
                     const newPID = document.getElementById(`guestNewPID-${i}`)?.value || 'New';
                     const name = document.getElementById(`guestName-${i}`)?.value;
-                    if (name) guests.push({ oldPID, newPID, name });
+                    const roomType = document.getElementById(`roomType-${i}`)?.value || '';
+                    if (name) guests.push({ oldPID, newPID, name, roomType, isSharer: false });
 
                     // V2.0.40: Save all sharers for this guest
                     const sharerCount = state.sharerCount?.[i] || 0;
@@ -4203,7 +4204,8 @@ ${busContent}`;
                         const sharerOldPID = document.getElementById(`sharerOldPID-${i}-${s}`)?.value || '';
                         const sharerNewPID = document.getElementById(`sharerNewPID-${i}-${s}`)?.value || 'New';
                         const sharerName = document.getElementById(`sharerName-${i}-${s}`)?.value;
-                        if (sharerName) guests.push({ oldPID: sharerOldPID, newPID: sharerNewPID, name: sharerName });
+                        const sharerRoomType = document.getElementById(`sharerRoomType-${i}-${s}`)?.value || '';
+                        if (sharerName) guests.push({ oldPID: sharerOldPID, newPID: sharerNewPID, name: sharerName, roomType: sharerRoomType, isSharer: true });
                     }
                 }
 
@@ -4215,6 +4217,7 @@ ${busContent}`;
                 data = {
                     agent: document.getElementById('agentName')?.value || '',
                     checkIn: document.getElementById('checkIn')?.value || '',
+                    checkOut: document.getElementById('checkOut')?.value || '',
                     authorizer: document.getElementById('authorizer')?.value || 'Jian.Xu',
                     currentTime,
                     guests
@@ -4223,12 +4226,23 @@ ${busContent}`;
 
             showMessage('📊 Saving to Google Sheets...');
 
-            // 直接用原始 JSON 拼接 URL（不用 encodeURIComponent）
-            // encodeURIComponent 编码后的 URL 在 iOS Safari 会出问题
-            const img = new Image();
-            img.src = `${GOOGLE_SCRIPT_URL}?data=${JSON.stringify(data)}`;
+            // 使用隐藏iframe发送请求
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'saveFrame';
+            document.body.appendChild(iframe);
 
+            // 构建URL参数
+            const url = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
+            
+            // 在iframe中加载
+            iframe.src = url;
+
+            // 2秒后显示成功消息并清理
             setTimeout(() => {
+                try {
+                    document.body.removeChild(iframe);
+                } catch(e) {}
                 showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
             }, 2000);
         }
