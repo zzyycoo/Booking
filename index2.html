@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <title>Hotel Book Email Generator V2.0.60 (PWA)</title>
+<title>Hotel Book Email Generator V2.1.0 (PWA Offline)</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.0.60
+        Version: 2.1.0
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
-        Last Updated: 2026-04-15
+        Last Updated: 2026-07-04
+
+        Changelog V2.1.0:
+        - PWA: full offline support. Vendor JS/CSS (xlsx + litepicker) now bundled locally
+        - Service Worker: network-first for HTML, cache-first for assets, navigation fallback
+        - No more CDN dependency at runtime — works 100% offline after first visit
 
         Changelog V2.0.60:
         - Added Hotel Name column (L) to Google Sheets
@@ -23,7 +28,12 @@
         - Agent encoding updated to VIE format (VIE1001, VIE1006, etc.)
         - Added VIE1040 ZHENG JIANSONG to agent list
 
-        Changelog V2.0.58:
+        Changelog V2.1.0:
+        - PWA: full offline support. Vendor JS/CSS (xlsx + litepicker) now bundled locally
+        - Service Worker: network-first for HTML, cache-first for assets, navigation fallback
+        - No more CDN dependency at runtime — works 100% offline after first visit
+
+        Changelog V2.0.59:
         - Added VIE1041 XIN MENGJIAO and VIE1044 to agent list
 
         Changelog V2.0.57:
@@ -1624,10 +1634,11 @@
         }
     </style>
     <!-- SheetJS library for Excel file reading -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
+    <script src="./vendor/xlsx.full.min.js"></script>
+    <script src="./vendor/litepicker.js"></script>
+    <link rel="stylesheet" href="./vendor/litepicker.css">
     <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

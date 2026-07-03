@@ -1,7 +1,7 @@
 {
   "name": "Hotel Book Email Generator",
   "short_name": "A Kang's Tool",
-  "version": "2.0.59 VIE1041/VIE1044",
+  "version": "2.1.0",
   "description": "Hotel room, car, golf and bus booking email generator with PID database support",
   "start_url": "/Booking/index2.html",
   "display": "standalone",
