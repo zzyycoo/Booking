@@ -4,19 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <meta name="version" content="2.1.1">
-<title>Hotel Book Email Generator V2.1.1 (PWA Offline)</title>
+    <meta name="version" content="2.1.2">
+<title>Hotel Book Email Generator V2.1.2 (PWA Offline + LocalStorage)</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.1.1
+        Version: 2.1.2
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
         Last Updated: 2026-07-04
 
-        Changelog V2.1.1:
-        - Fix: Check Update button no longer shows sticky "new version" toast when already on latest
-        - Root cause: version string format mismatch (latestVersion "2.1.0" vs thisVersion "V2.1.0")
-        - Added <meta name="version"> as authoritative source; both extractors normalize to "2.1.0" form
-        - Subtitle corrected from V2.0.60 -> V2.1.0 -> V2.1.1
+        Changelog V2.1.2:
+        - Feature: PID database now persists to localStorage (~600KB) — no re-import on reload
+        - Auto-restore: page load reads booking-pid-db from localStorage, fills Map, shows "✅ N records restored (local)"
+        - Save trigger: finishImport() writes Map → localStorage after each successful import
+        - Manual Re-import still works (overwrites saved data)
+        - Subtitle corrected from V2.0.60 -> V2.1.0 -> V2.1.1 -> V2.1.2
 
         Changelog V2.1.0:
         - PWA: full offline support. Vendor JS/CSS (xlsx + litepicker) now bundled locally
@@ -1659,7 +1660,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.1</span>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.2</span>
                 <button onclick="checkForUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-left:6px;">🔄 Check Update</button>
                 <button onclick="forceUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">⚡ Force Update</button>
             </p>
@@ -1830,6 +1831,38 @@
             a171GuestCount: 0,
             a171SubjectType: 'patron'
         };
+
+        // V2.1.2: Restore PID database from localStorage on page load
+        function initPIDDatabaseFromStorage() {
+            try {
+                const saved = localStorage.getItem('booking-pid-db');
+                if (!saved) return false;
+                const data = JSON.parse(saved);
+                if (!data.pidDatabase || data.pidDatabase.length === 0) return false;
+
+                state.pidDatabase = new Map(data.pidDatabase);
+                state.oldPIDIndex = new Map(data.oldPIDIndex || []);
+                state.newPIDIndex = new Map(data.newPIDIndex || []);
+                state.pidDatabaseLoaded = true;
+
+                const statusEl = document.getElementById('pidStatus');
+                const iconEl = document.getElementById('pidStatusIcon');
+                const buttonEl = document.getElementById('pidImportBtn');
+                if (statusEl) {
+                    const savedDate = data.savedAt ? new Date(data.savedAt).toLocaleString() : '';
+                    statusEl.innerHTML = `<span style="color: #10b981; font-weight: 600;">✅ ${data.pidDatabase.length.toLocaleString()} records restored</span> <span style="color: var(--text-secondary); font-size: 0.7rem;">(local · ${savedDate})</span>`;
+                }
+                if (iconEl) iconEl.textContent = '✅';
+                if (buttonEl) buttonEl.textContent = 'Re-import';
+
+                console.log(`[v2.1.2] Restored ${data.pidDatabase.length} records from localStorage`);
+                return true;
+            } catch (e) {
+                console.warn('[v2.1.2] Failed to restore from localStorage:', e);
+                return false;
+            }
+        }
+        initPIDDatabaseFromStorage();
 
         const roomTypes = {
             HIR: [
@@ -3215,6 +3248,22 @@
                         statusEl.innerHTML = `<span style="color: #10b981; font-weight: 600;">✅ ${count.toLocaleString()} records ready</span>`;
                         if (buttonEl) buttonEl.textContent = 'Re-import';
                         if (iconEl) iconEl.textContent = '✅';
+
+                        // V2.1.2: Persist PID database to localStorage (saves ~600KB Map data)
+                        try {
+                            const dataToSave = {
+                                pidDatabase: Array.from(state.pidDatabase.entries()),
+                                oldPIDIndex: Array.from(state.oldPIDIndex.entries()),
+                                newPIDIndex: Array.from(state.newPIDIndex.entries()),
+                                savedAt: Date.now(),
+                                recordCount: count
+                            };
+                            localStorage.setItem('booking-pid-db', JSON.stringify(dataToSave));
+                            const sizeKB = (JSON.stringify(dataToSave).length / 1024).toFixed(1);
+                            console.log(`[v2.1.2] Saved ${count} records to localStorage (${sizeKB} KB)`);
+                        } catch (e) {
+                            console.warn('[v2.1.2] Failed to save to localStorage:', e);
+                        }
                     }
 
                     // 开始处理

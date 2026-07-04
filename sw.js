@@ -1,6 +1,9 @@
 // sw.js — Service Worker for Hotel Book Email Generator (index2.html)
-// Version: 2.1.0 — Full offline: local vendor + network-first HTML + cache-first assets
-// v2.1.0 changes vs v2.0.59:
+// Version: 2.1.2 — Full offline + PID database persisted to localStorage
+// v2.1.2 changes vs v2.1.0:
+//   - PID database (Map) auto-saved to localStorage on import (~600KB)
+//   - Page load auto-restores from localStorage, no re-import needed
+//   - CACHE_NAME bumped so old SW gets cleared and replaced
 //   - vendor/ (xlsx, litepicker, litepicker.css) added to APP_SHELL — true offline support
 //   - Network-first for HTML navigations (so updates are seen when online)
 //   - Cache-first for static assets (vendor/, manifest, favicon)
@@ -8,7 +11,7 @@
 //   - Robust install: cache.addAll() with per-URL fallback so a single 404 doesn't kill install
 //   - clients.claim() + skipWaiting message handler unchanged
 
-const CACHE_VERSION = 'v2.1.0';
+const CACHE_VERSION = 'v2.1.2';
 const CACHE_NAME = `akang-tool-${CACHE_VERSION}`;
 
 const APP_SHELL = [
