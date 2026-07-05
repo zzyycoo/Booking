@@ -4,13 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <meta name="version" content="2.1.2">
-<title>Hotel Book Email Generator V2.1.2 (PWA Offline + LocalStorage)</title>
+    <meta name="version" content="2.1.3">
+<title>Hotel Book Email Generator V2.1.3 (PWA Offline + LocalStorage)</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.1.2
+        Version: 2.1.3
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
-        Last Updated: 2026-07-04
+        Last Updated: 2026-07-05
+
+        Changelog V2.1.3:
+        - Bump CACHE_VERSION 2.1.2 -> 2.1.3 to force-clear stale 2.1.1 cache on user devices
+        - Forces one fresh fetch of index2.html from network on next page load
+        - No code behavior change — only cache busting
 
         Changelog V2.1.2:
         - Feature: PID database now persists to localStorage (~600KB) — no re-import on reload
@@ -1660,7 +1665,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.2</span>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.3</span>
                 <button onclick="checkForUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-left:6px;">🔄 Check Update</button>
                 <button onclick="forceUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">⚡ Force Update</button>
             </p>
@@ -1832,7 +1837,7 @@
             a171SubjectType: 'patron'
         };
 
-        // V2.1.2: Restore PID database from localStorage on page load
+        // V2.1.3: Restore PID database from localStorage on page load
         function initPIDDatabaseFromStorage() {
             try {
                 const saved = localStorage.getItem('booking-pid-db');
@@ -1855,10 +1860,10 @@
                 if (iconEl) iconEl.textContent = '✅';
                 if (buttonEl) buttonEl.textContent = 'Re-import';
 
-                console.log(`[v2.1.2] Restored ${data.pidDatabase.length} records from localStorage`);
+                console.log(`[v2.1.3] Restored ${data.pidDatabase.length} records from localStorage`);
                 return true;
             } catch (e) {
-                console.warn('[v2.1.2] Failed to restore from localStorage:', e);
+                console.warn('[v2.1.3] Failed to restore from localStorage:', e);
                 return false;
             }
         }
@@ -3249,7 +3254,7 @@
                         if (buttonEl) buttonEl.textContent = 'Re-import';
                         if (iconEl) iconEl.textContent = '✅';
 
-                        // V2.1.2: Persist PID database to localStorage (saves ~600KB Map data)
+                        // V2.1.3: Persist PID database to localStorage (saves ~600KB Map data)
                         try {
                             const dataToSave = {
                                 pidDatabase: Array.from(state.pidDatabase.entries()),
@@ -3260,9 +3265,9 @@
                             };
                             localStorage.setItem('booking-pid-db', JSON.stringify(dataToSave));
                             const sizeKB = (JSON.stringify(dataToSave).length / 1024).toFixed(1);
-                            console.log(`[v2.1.2] Saved ${count} records to localStorage (${sizeKB} KB)`);
+                            console.log(`[v2.1.3] Saved ${count} records to localStorage (${sizeKB} KB)`);
                         } catch (e) {
-                            console.warn('[v2.1.2] Failed to save to localStorage:', e);
+                            console.warn('[v2.1.3] Failed to save to localStorage:', e);
                         }
                     }
 
