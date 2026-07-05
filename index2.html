@@ -4394,20 +4394,31 @@ ${busContent}`;
     async function checkForUpdate() {
         try {
             _showToast('⏳ Checking for updates...', false);
-            var resp = await fetch(GITHUB_RAW_BASE + '/index2.html?t=' + Date.now(), { cache: 'no-store' });
+            // Use cache-buster query + ensure no-store + POST-redirect-GET-safe headers.
+            // Also add _cb param so SW line 72 (cache-buster bypass) trips even if
+            // something routes through service worker.
+            var url = GITHUB_RAW_BASE + '/index2.html?t=' + Date.now() + '&_cb=' + Date.now();
+            var resp = await fetch(url, {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+            });
             if (resp.status === 404) throw new Error('File not found on GitHub');
             if (!resp.ok) throw new Error('HTTP ' + resp.status);
             var text = await resp.text();
+            console.log('[checkForUpdate] fetched', text.length, 'bytes from', url);
             // Prefer the explicit <meta name="version"> tag (set in <head>).
             // Fall back to <title> only if meta is missing — avoids false matches
             // against changelog strings like "Changelog V2.0.59" in HTML comments.
+            // Use first match only (in case multiple meta version tags somehow exist).
             var m = text.match(/<meta\s+name=["']version["']\s+content=["']([^"']+)["']/i);
             if (!m) {
                 var titleMatch = text.match(/<title>([^<]*)<\/title>/i);
                 m = titleMatch ? titleMatch[1].match(/V[\d.]+/) : null;
             }
-            var latestVersion = m ? (m[1] || m[0]).replace(/^V/, '') : '';
+            var latestVersion = m ? (m[1] || m[0]).replace(/^V/, '').trim() : '';
+            console.log('[checkForUpdate] raw match:', JSON.stringify(m), '-> latestVersion =', latestVersion);
             var thisVersion = _getPageVersion();
+            console.log('[checkForUpdate] thisVersion (from local page) =', thisVersion);
             if (!latestVersion) throw new Error('Cannot read version from GitHub file');
             if (latestVersion !== thisVersion) {
                 _updateAvailable = true;
