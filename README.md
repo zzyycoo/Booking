@@ -1,14 +1,21 @@
 # Booking
 
-A booking email generator — **Version 2.1.3** (Hotel Room / Car / Golf / Bus + PID database + Google Sheets + PWA)
+A booking email generator — **Version 2.1.4** (Hotel Room / Car / Golf / Bus + PID database + Google Sheets + PWA)
 
 # Trigger rebuild Sat Mar 21 03:46:12 PM CST 2026
 
 ---
 
-## Current Version: **2.1.3**
+## Current Version: **2.1.4**
 
 Last updated: **2026-07-05**
+
+### Changelog V2.1.4 (2026-07-05)
+- **Save to Sheets: switch from hidden iframe back to hidden img beacon** (desktop + iOS PWA both work)
+- img is more permissive cross-origin than iframe — no sandbox / cookie policy issues
+- Replace fake-success `setTimeout(2000)` with real `onload`/`onerror` + 5s timeout detection
+- User now sees real failure messages if Apps Script URL is down or network is broken
+- ⚠️ URL length: 10 guests ≈ 2.2KB, safe; 20+ guests ≈ 4KB, still safe in Chrome but may hit iOS Safari ~80KB cap
 
 ### Changelog V2.1.3 (2026-07-05)
 - Bump `CACHE_VERSION` 2.1.2 → 2.1.3 to force-clear stale 2.1.1 cache on user devices
@@ -36,7 +43,7 @@ Last updated: **2026-07-05**
 |---|---|
 | `index2.html` | Main app (PWA entry point — version-checked) |
 | `index.html` | Legacy entry point (no PWA) |
-| `sw.js` | Service Worker (cache version = `v2.1.3`) |
+| `sw.js` | Service Worker (cache version = `v2.1.4`) |
 | `manifest.webmanifest` | PWA manifest |
 | `vendor/` | Bundled JS/CSS (xlsx, litepicker) — offline support |
 | `_redirects` / `_headers` | Netlify-style config |

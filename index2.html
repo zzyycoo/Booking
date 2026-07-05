@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <meta name="version" content="2.1.3">
-<title>Hotel Book Email Generator V2.1.3 (PWA Offline + LocalStorage)</title>
+    <meta name="version" content="2.1.4">
+<title>Hotel Book Email Generator V2.1.4 (PWA Offline + LocalStorage)</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.1.3
+        Version: 2.1.4
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
         Last Updated: 2026-07-05
+
+        Changelog V2.1.4:
+        - Save to Sheets: switch from hidden iframe back to hidden img beacon
+        - img is more permissive cross-origin than iframe (works in all browsers + PWA + desktop)
+        - Replace fake-success setTimeout with real onload/onerror + 5s timeout detection
+        - User will now see real failure if Apps Script URL is down or network is broken
 
         Changelog V2.1.3:
         - Bump CACHE_VERSION 2.1.2 -> 2.1.3 to force-clear stale 2.1.1 cache on user devices
@@ -1665,7 +1671,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.3</span>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.4</span>
                 <button onclick="checkForUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-left:6px;">🔄 Check Update</button>
                 <button onclick="forceUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">⚡ Force Update</button>
             </p>
@@ -1837,7 +1843,7 @@
             a171SubjectType: 'patron'
         };
 
-        // V2.1.3: Restore PID database from localStorage on page load
+        // V2.1.4: Restore PID database from localStorage on page load
         function initPIDDatabaseFromStorage() {
             try {
                 const saved = localStorage.getItem('booking-pid-db');
@@ -1860,10 +1866,10 @@
                 if (iconEl) iconEl.textContent = '✅';
                 if (buttonEl) buttonEl.textContent = 'Re-import';
 
-                console.log(`[v2.1.3] Restored ${data.pidDatabase.length} records from localStorage`);
+                console.log(`[v2.1.4] Restored ${data.pidDatabase.length} records from localStorage`);
                 return true;
             } catch (e) {
-                console.warn('[v2.1.3] Failed to restore from localStorage:', e);
+                console.warn('[v2.1.4] Failed to restore from localStorage:', e);
                 return false;
             }
         }
@@ -3254,7 +3260,7 @@
                         if (buttonEl) buttonEl.textContent = 'Re-import';
                         if (iconEl) iconEl.textContent = '✅';
 
-                        // V2.1.3: Persist PID database to localStorage (saves ~600KB Map data)
+                        // V2.1.4: Persist PID database to localStorage (saves ~600KB Map data)
                         try {
                             const dataToSave = {
                                 pidDatabase: Array.from(state.pidDatabase.entries()),
@@ -3265,9 +3271,9 @@
                             };
                             localStorage.setItem('booking-pid-db', JSON.stringify(dataToSave));
                             const sizeKB = (JSON.stringify(dataToSave).length / 1024).toFixed(1);
-                            console.log(`[v2.1.3] Saved ${count} records to localStorage (${sizeKB} KB)`);
+                            console.log(`[v2.1.4] Saved ${count} records to localStorage (${sizeKB} KB)`);
                         } catch (e) {
-                            console.warn('[v2.1.3] Failed to save to localStorage:', e);
+                            console.warn('[v2.1.4] Failed to save to localStorage:', e);
                         }
                     }
 
@@ -4311,25 +4317,35 @@ ${busContent}`;
 
             showMessage('📊 Saving to Google Sheets...');
 
-            // 使用隐藏iframe发送请求
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'saveFrame';
-            document.body.appendChild(iframe);
-
-            // 构建URL参数
+            // 使用隐藏 img 发送请求（最宽松的跨域方式）
+            // img.src = URL —— 浏览器对图片的跨域行为最松，
+            // 不受 iframe sandbox / cookie 策略 / fetch 限制影响
+            // 桌面浏览器通常撑得住 8000+ 字符 URL，但 iOS Safari 上限 ~80KB
+            // 10 个客人 URL ~2.2KB，安全；20+ 客人需注意
             const url = `${GOOGLE_SCRIPT_URL}?data=${encodeURIComponent(JSON.stringify(data))}`;
-            
-            // 在iframe中加载
-            iframe.src = url;
+            const img = new Image();
+            img.style.display = 'none';
+            img.referrerPolicy = 'no-referrer';
 
-            // 2秒后显示成功消息并清理
-            setTimeout(() => {
-                try {
-                    document.body.removeChild(iframe);
-                } catch(e) {}
+            // 真正检测成功/失败 —— 用 onload / onerror 而非 setTimeout 永远走成功
+            let _saveResolved = false;
+            const _saveTimer = setTimeout(() => {
+                if (!_saveResolved) {
+                    _saveResolved = true;
+                    showMessage(`⚠️ Save timed out (网络可能不通或 Apps Script URL 失效)。请确认 Sheets 是否真的收到。`, true);
+                }
+            }, 5000);
+
+            img.onload = img.onerror = function() {
+                if (_saveResolved) return;
+                _saveResolved = true;
+                clearTimeout(_saveTimer);
+                // 注意：onerror 也会触发（Apps Script 302 跳转 / no content 200 都会 fire onload 或 onerror）
+                // img 请求无法读取响应内容（跨域 opaque），但只要请求成功到达服务器，就视为成功
                 showMessage(`✅ Successfully saved ${data.guests.length} guest(s) to Google Sheets!`, true);
-            }, 2000);
+            };
+
+            img.src = url;
         }
 
         let _msgTimer = null;

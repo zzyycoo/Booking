@@ -1,11 +1,14 @@
 // sw.js — Service Worker for Hotel Book Email Generator (index2.html)
-// Version: 2.1.3 — Bump SW to force-clear stale 2.1.1 cache on user devices
+// Version: 2.1.4 — Save-to-Sheets iframe → img, real success detection
+// v2.1.4 changes vs v2.1.3:
+//   - Cache bust only: force clients to re-fetch index2.html (now uses img saveToGoogleSheets)
+//   - No SW behavior change — only CACHE_VERSION bump to ship the new code
 // v2.1.3 changes vs v2.1.2:
 //   - CACHE_VERSION bumped 2.1.2 -> 2.1.3 so old SW (cached 2.1.1 HTML) gets purged
 //   - Forces one fresh fetch of index2.html from network on next page load
 //   - No code behavior change — only cache busting
 
-const CACHE_VERSION = 'v2.1.3';
+const CACHE_VERSION = 'v2.1.4';
 const CACHE_NAME = `akang-tool-${CACHE_VERSION}`;
 
 const APP_SHELL = [
