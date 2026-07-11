@@ -1,14 +1,23 @@
 # Booking
 
-A booking email generator — **Version 2.1.8** (Hotel Room / Car / Golf / Bus + PID database + Google Sheets + PWA)
+A booking email generator — **Version 2.1.9** (Hotel Room / Car / Golf / Bus + PID database + Google Sheets + PWA)
 
 # Trigger rebuild Sat Mar 21 03:46:12 PM CST 2026
 
 ---
 
-## Current Version: **2.1.8**
+## Current Version: **2.1.9**
 
-Last updated: **2026-07-08**
+Last updated: **2026-07-11**
+
+### Changelog V2.1.9 (2026-07-11)
+- **Car payment options: unify case to ALL CAPS** + add `'PLATINUM BENEFITS'` option
+- Default option text updated: `'Free Comp (2000+ points)'` → `'FREE COMP (if not enough points,TBU)'`
+- All 4 car payment options now consistent uppercase style: `FREE COMP` / `GUEST COMP` / `GOA` / `PLATINUM BENEFITS`
+- Bump `CACHE_VERSION` 2.1.8 → 2.1.9 to force-clear stale 2.1.8 cache on user devices
+- Forces one fresh fetch of `index2.html` from network on next page load
+- No code behavior change in service worker — only cache busting
+- Version bump rolled to: `<meta name="version">` + `<title>` + page subtitle + all changelog refs + service worker cache
 
 ### Changelog V2.1.8 (2026-07-08)
 - Bump `CACHE_VERSION` 2.1.4 → 2.1.8 (skipped 2.1.5 / 2.1.6 / 2.1.7 per user preference)
@@ -49,7 +58,7 @@ Last updated: **2026-07-08**
 |---|---|
 | `index2.html` | Main app (PWA entry point — version-checked) |
 | `index.html` | Legacy entry point (no PWA) |
-| `sw.js` | Service Worker (cache version = `v2.1.8`) |
+| `sw.js` | Service Worker (cache version = `v2.1.9`) |
 | `manifest.webmanifest` | PWA manifest |
 | `vendor/` | Bundled JS/CSS (xlsx, litepicker) — offline support |
 | `_redirects` / `_headers` | Netlify-style config |

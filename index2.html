@@ -4,13 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hotel room, car, golf and bus booking email generator with PID database support">
-    <meta name="version" content="2.1.8">
-<title>Hotel Book Email Generator V2.1.8 (PWA Offline + LocalStorage)</title>
+    <meta name="version" content="2.1.9">
+<title>Hotel Book Email Generator V2.1.9 (PWA Offline + LocalStorage)</title>
     <!--
         Hotel Book Email Generator
-        Version: 2.1.8
+        Version: 2.1.9
         Features: Room/Car/Golf/Bus Booking + PID Database + Google Sheets Integration + PWA
-        Last Updated: 2026-07-08
+        Last Updated: 2026-07-11
+
+        Changelog V2.1.9:
+        - Car payment options: unify case to ALL CAPS + add 'PLATINUM BENEFITS' option
+        - Default option text updated: 'Free Comp (2000+ points)' → 'FREE COMP (if not enough points,TBU)'
+        - All 4 car payment options now consistent uppercase style: FREE COMP / GUEST COMP / GOA / PLATINUM BENEFITS
+        - Forces one fresh fetch of index2.html from network on next page load (CACHE_VERSION bump)
+        - No SW behavior change — only cache busting
 
         Changelog V2.1.8:
         - Bump CACHE_VERSION 2.1.4 -> 2.1.8 (skipped 2.1.5/2.1.6/2.1.7 per user preference)
@@ -1676,7 +1683,7 @@
     <div class="container">
         <div class="header">
             <h1>A KANG'S TOOL</h1>
-            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.8</span>
+            <p class="subtitle">Email Booking Generator <span style="font-size: 0.8em; opacity: 0.7; font-weight: 500;">V2.1.9</span>
                 <button onclick="checkForUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;margin-left:6px;">🔄 Check Update</button>
                 <button onclick="forceUpdate()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">⚡ Force Update</button>
             </p>
@@ -3086,9 +3093,10 @@
                     <div class="form-group">
                         <label>Payment</label>
                         <select id="carPayment-${n}">
-                            <option value="Free Comp (If guest enough 2000 points)">Free Comp (2000+ points)</option>
-                            <option value="Guest Comp">Guest Comp</option>
+                            <option value="FREE COMP (if not enough points,TBU)">FREE COMP (if not enough points,TBU)</option>
+                            <option value="GUEST COMP">GUEST COMP</option>
                             <option value="GOA">GOA</option>
+                            <option value="PLATINUM BENEFITS">PLATINUM BENEFITS</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -4048,7 +4056,7 @@ Drop off point: ${dropoff}`);
                 }
             }
 
-            const payment = document.getElementById(`carPayment-1`)?.value || 'Free Comp (If guest enough 2000 points)';
+            const payment = document.getElementById(`carPayment-1`)?.value || 'FREE COMP (if not enough points,TBU)';
             const authorizer = document.getElementById(`carAuthorizer-1`)?.value || 'xujian';
 
             return `Subject: VIP Car Service Request
